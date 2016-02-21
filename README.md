@@ -7,6 +7,9 @@
 
 TLDR: Me and hopefully you!
 
+Waiting for remote build fails suck! It would be nice to use the extra resources sitting on the average developer machine to automatically compile, test and package applications while sitting in a meeting or at lunch.
+
+
 Features 
 
 * Decentralized: able to run on a development system (laptop)
@@ -14,7 +17,23 @@ Features
 * Modern Interface: a web ui not for configuration but for monitoring builds
 
 
+## Development Process
 
+trigr assumes a development process that is a series of connected pipelines configuration, prepare, build, package and deploy. 
 
+* configuration
+  * code checkout
+  * dependencies
+* prepare
+  * code generation
+* build
+  * compile
+  * obscure (javascript)
+* package
+  * tar, compression 
+  * encryption
+  * distribution
+  * docker
+* deploy
 
 
