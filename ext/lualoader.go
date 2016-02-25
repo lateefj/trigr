@@ -22,8 +22,9 @@ func NewLuaLoader(in io.Reader, out io.Writer) *LuaLoader {
 
 func (ll *LuaLoader) buildContext(trig *trigr.Trigger) {
 	ll.State.SetGlobal("trig", luar.New(ll.State, trig))
-	ll.State.SetGlobal("trig_out", luar.New(ll.State, ll.Output))
-	ll.State.SetGlobal("trig_in", luar.New(ll.State, ll.Input))
+	// These need to warp string to []byte array
+	ll.State.SetGlobal("pipe_out", luar.New(ll.State, ll.Output))
+	ll.State.SetGlobal("pipe_in", luar.New(ll.State, ll.Input))
 }
 func (ll *LuaLoader) Run(path string, trig *trigr.Trigger, out chan *trigr.Trigger) error {
 	ll.buildContext(trig)

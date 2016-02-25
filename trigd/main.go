@@ -9,13 +9,10 @@ import (
 	"os"
 	"sync/atomic"
 
-	//"github.com/Shopify/go-lua"
 	"bitbucket.org/lateefj/httphacks"
 	log "github.com/Sirupsen/logrus"
 	"github.com/lateefj/trigr"
 	"github.com/lateefj/trigr/ext"
-	//	"github.com/layeh/gopher-luar"
-	//	"github.com/yuin/gopher-lua"
 	"golang.org/x/net/websocket"
 )
 
@@ -51,15 +48,6 @@ func PublishTrigger(ws *websocket.Conn) {
 	if _, err := os.Stat(luaPath); err == nil {
 
 		l := ext.NewLuaDslLoader(in, out, "./lua")
-		/*l := lua.NewState()
-		defer l.Close()
-		l.SetGlobal("trig", luar.New(l, t))
-		l.SetGlobal("out", luar.New(l, out))
-		log.Debugf("luaPath is %s", luaPath)
-		if err := l.DoFile(luaPath); err != nil {
-			log.Errorf("Failed to run lua file %s", err)
-			return
-		}*/
 		err = l.RunDsl(luaPath, &t, make(chan *trigr.Trigger))
 		if err != nil {
 			log.Errorf("Failed ot run dsl %s", err)

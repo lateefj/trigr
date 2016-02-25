@@ -30,7 +30,18 @@ dsl.env = {
   end,
   speak = function(message)
     print("I said:", message)
-  end 
+  end,
+  print = function(...)
+    print(...)
+  end,
+  console = function(fmt, ...)
+    print(string.format(fmt, ...))
+    pipe_out.Write(string.format(fmt, ...))
+  end,
+  trig = trig,
+  pipe_out = pipe_out,
+  pipe_in = pipe_in
+
 }
 
 return dsl
