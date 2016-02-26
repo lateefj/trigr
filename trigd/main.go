@@ -5,11 +5,9 @@ import (
 	"fmt"
 	"io"
 	//"io/ioutil"
-	"net/http"
 	"os"
 	"sync/atomic"
 
-	"bitbucket.org/lateefj/httphacks"
 	log "github.com/Sirupsen/logrus"
 	"github.com/lateefj/trigr"
 	"github.com/lateefj/trigr/ext"
@@ -25,7 +23,14 @@ type TriggerExec struct {
 var messageCount int64
 
 func PublishTrigger(ws *websocket.Conn) {
+	clientId, send := ClientsConnected.New()
+	defer ClientsConnected.Remove(clientId)
 	defer ws.Close()
+	go func() {
+		for m := range send {
+			websocket.Message.Send(ws, m)
+		}
+	}()
 	var reply string
 	err := websocket.Message.Receive(ws, &reply)
 	if err != nil {
@@ -83,11 +88,6 @@ func main() {
 	messageCount = 0
 	log.SetLevel(log.DebugLevel)
 	log.Debug("Hmmmmm starting trigrd")
-	http.HandleFunc("/", httphacks.TimeWrap(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(fmt.Sprintf("Hello all goood total messages %d", atomic.LoadInt64(&messageCount))))
-	}))
-	http.Handle("/ws", websocket.Handler(PublishTrigger))
-	//http.ListenAndServe(":7771", nil)
-	http.ListenAndServe(":8080", nil)
+	setupHandlers()
+	//handleHttp()
 }

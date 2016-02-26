@@ -1,0 +1,21 @@
+{
+  "name": "ui",
+  "homepage": "https://github.com/lateefj/trigr",
+  "authors": [
+    "Lateef Jackson <lateef.jackson@gmail.com>"
+  ],
+  "description": "trigd UI",
+  "main": "",
+  "moduleType": [],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "polymer": "Polymer/polymer#^1.2.0"
+  }
+}
