@@ -22,6 +22,15 @@ type TriggerExec struct {
 
 var messageCount int64
 
+func ReadMessages(ws *websocket.Conn) {
+	clientId, send := ClientsConnected.New()
+	defer ClientsConnected.Remove(clientId)
+	defer ws.Close()
+	for m := range send {
+		println("Sending message from socket", m)
+		websocket.Message.Send(ws, m)
+	}
+}
 func PublishTrigger(ws *websocket.Conn) {
 	clientId, send := ClientsConnected.New()
 	defer ClientsConnected.Remove(clientId)

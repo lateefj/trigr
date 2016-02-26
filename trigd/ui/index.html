@@ -1,6 +1,26 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <script>
+
+    var connection = new WebSocket('ws://coding.lhj.me:8080/ws');
+    connection.onopen = function(){
+    /*Send a small message to the console once the connection is established */
+    console.log('Connection open!');
+    }
+
+    connection.onclose = function(){
+    console.log('Connection closed');
+    }
+    connection.onerror = function(error){
+    console.log('Error detected: ' + error);
+    }
+
+    connection.onmessage = function(e){
+    var server_message = e.data;
+    console.log(server_message);
+    }
+  </script>
     <script src="bower_components/webcomponentsjs/webcomponents-lite.min.js"></script>
     <link rel="import" href="header-element.html">
     <link rel="import" href="picture-frame.html">

@@ -24,6 +24,7 @@ func init() {
 
 func statusHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
+	ClientsConnected.Send("Status being checked")
 	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte(`{"status":"Happy happy joy joy!"}`))
 }
@@ -46,10 +47,11 @@ func setupHandlers() {
 	http.Handle("/", http.FileServer(ui))
 	http.Handle("/bower_components", http.FileServer(bower))
 	http.HandleFunc("/api/status", httphacks.TimeWrap(func(w http.ResponseWriter, r *http.Request) {
+		ClientsConnected.Send("Status being checked")
 		w.Header().Set("Content-Type", "application/json")
 		w.Write([]byte(`{"status":"Happy happy joy joy!"}`))
 	}))
-	http.Handle("/ws", websocket.Handler(PublishTrigger))
+	http.Handle("/ws/trigger", websocket.Handler(PublishTrigger))
+	http.Handle("/ws", websocket.Handler(ReadMessages))
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", 8080), nil))
-	http.ListenAndServe(":8080", nil)
 }

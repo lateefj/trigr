@@ -36,6 +36,7 @@ func (c *Connected) Remove(id int32) {
 }
 
 func (c *Connected) Send(m string) {
+	println("Sending message ", m)
 	c.Lock.RLock()
 	for _, out := range c.outbound {
 		out <- m
