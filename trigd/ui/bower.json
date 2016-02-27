@@ -1,13 +1,14 @@
 {
-  "name": "ui",
+  "name": "Trigr UI",
   "homepage": "https://github.com/lateefj/trigr",
   "authors": [
     "Lateef Jackson <lateef.jackson@gmail.com>"
   ],
-  "description": "trigd UI",
-  "main": "",
+  "description": "Experiment",
+  "main": "index.html",
   "moduleType": [],
   "license": "MIT",
+  "private": true,
   "ignore": [
     "**/.*",
     "node_modules",
@@ -16,6 +17,9 @@
     "tests"
   ],
   "dependencies": {
+    "iron-ajax": "polymerelements/iron-ajax#^1.1.1",
+    "paper-header-panel": "polymerelements/paper-header-panel#^1.1.4",
+    "paper-material": "polymerelements/paper-material#^1.0.6",
     "polymer": "Polymer/polymer#^1.2.0"
   }
 }

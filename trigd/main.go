@@ -20,7 +20,14 @@ type TriggerExec struct {
 	Output io.WriteCloser
 }
 
-var messageCount int64
+var (
+	messageCount   int64
+	TriggerChannel chan trigr.Trigger
+)
+
+func init() {
+	TriggerChannel = make(chan trigr.Trigger)
+}
 
 func ReadMessages(ws *websocket.Conn) {
 	clientId, send := ClientsConnected.New()
@@ -97,6 +104,19 @@ func main() {
 	messageCount = 0
 	log.SetLevel(log.DebugLevel)
 	log.Debug("Hmmmmm starting trigrd")
+	go func() {
+		for t := range TriggerChannel {
+
+			b, err := json.Marshal(t)
+			if err != nil {
+				log.Errorf("Failed to marshal trigger %s", err)
+			}
+			ClientsConnected.Send(string(b))
+		}
+	}()
+
+	dw := DirectoryWatcher{"./", TriggerChannel}
+	go dw.Watch()
 	setupHandlers()
 	//handleHttp()
 }

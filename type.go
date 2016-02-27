@@ -34,14 +34,14 @@ func (l *Log) Marshal() ([]byte, error) {
 }
 
 type Trigger struct {
-	Timestamp int64                   `json:"timestamp"` // Timestamp
-	Type      string                  `json:"type"`      // Type of trigger event
-	Data      *map[string]interface{} `json:"data"`      // Additional data associated
-	Logs      chan *Log               `json:"-"`
+	Timestamp int64                  `json:"timestamp"` // Timestamp
+	Type      string                 `json:"type"`      // Type of trigger event
+	Data      map[string]interface{} `json:"data"`      // Additional data associated
+	Logs      chan *Log              `json:"-"`
 }
 
-func NewTrigger(t string, data *map[string]interface{}) *Trigger {
-	return &Trigger{Timestamp: milli(), Type: t, Data: data}
+func NewTrigger(t string, data map[string]interface{}) Trigger {
+	return Trigger{Timestamp: milli(), Type: t, Data: data}
 }
 
 func (t *Trigger) Marshal() ([]byte, error) {
