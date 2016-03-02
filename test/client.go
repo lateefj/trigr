@@ -11,7 +11,7 @@ import (
 
 func main() {
 	//url := "ws://localhost:7771/ws"
-	url := "ws://localhost:8080/ws"
+	url := "ws://localhost:8080/ws/trigger"
 	for {
 		conn, err := websocket.Dial(url, "", "http://localhost")
 		if err != nil {

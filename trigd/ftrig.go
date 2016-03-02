@@ -1,3 +1,5 @@
+// TODO: Recursive watch needs doing
+
 package main
 
 import (
@@ -26,14 +28,15 @@ func (dw *DirectoryWatcher) Watch() error {
 	for {
 		select {
 		case ev := <-watcher.Event:
-			d := map[string]interface{}{
-				"path": fmt.Sprintf("%s/%s", dw.Path, ev.Name),
+			if ev.Mask == inotify.IN_CLOSE_WRITE {
+				d := map[string]interface{}{
+					"path": fmt.Sprintf("%s%s", dw.Path, ev.Name),
+				}
+				t := trigr.NewTrigger("file", d)
+
+				dw.TriggerChannel <- t
+				log.Debugf("Write event: %v", ev)
 			}
-			t := trigr.NewTrigger("File", d)
-
-			dw.TriggerChannel <- t
-
-			log.Println("event:", ev)
 		case err := <-watcher.Error:
 			log.Println("error:", err)
 		}

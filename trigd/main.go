@@ -60,42 +60,42 @@ func PublishTrigger(ws *websocket.Conn) {
 		log.Errorf("Failed to unmarshal %s", err)
 		return
 	}
+	handleTrigger(t)
+	var tl trigr.Log
+	for {
+		err = websocket.Message.Receive(ws, &reply)
+		if err == io.EOF {
+			break
+		}
+
+		if err != nil {
+			log.Errorf("Error %s receiving reply", err)
+			break
+		}
+		log.Debug("Received back from client: " + reply)
+		atomic.AddInt64(&messageCount, 1)
+		err = json.Unmarshal([]byte(reply), &tl)
+		if err != nil {
+			log.Errorf("Failed to unmarshal log %s", err)
+			continue
+		}
+	}
+}
+
+func handleTrigger(t trigr.Trigger) {
 	in, out, err := os.Pipe()
 	if err != nil {
 		log.Errorf("Failed to get a pipe %s", err)
 		return
 	}
 	luaPath := fmt.Sprintf("%s.lua", t.Type)
+	log.Debugf("Lua loading file %s", luaPath)
 	if _, err := os.Stat(luaPath); err == nil {
 
 		l := ext.NewLuaDslLoader(in, out, "./lua")
 		err = l.RunDsl(luaPath, &t, make(chan *trigr.Trigger))
 		if err != nil {
 			log.Errorf("Failed ot run dsl %s", err)
-		}
-
-		var tl trigr.Log
-		for {
-			err = websocket.Message.Receive(ws, &reply)
-			if err == io.EOF {
-				break
-			}
-
-			if err != nil {
-				log.Errorf("Error %s receiving reply", err)
-				break
-			}
-			log.Debug("Received back from client: " + reply)
-			atomic.AddInt64(&messageCount, 1)
-			err = json.Unmarshal([]byte(reply), &tl)
-			if err != nil {
-				log.Errorf("Failed to unmarshal log %s", err)
-				continue
-			}
-
-			/*l.SetGlobal("log", luar.New(l, tl))
-			l.DoString("handle_log(log)")
-			log.Debugf("Log text is is: %s", tl.Text)*/
 		}
 	}
 }
@@ -107,6 +107,7 @@ func main() {
 	go func() {
 		for t := range TriggerChannel {
 
+			handleTrigger(t)
 			b, err := json.Marshal(t)
 			if err != nil {
 				log.Errorf("Failed to marshal trigger %s", err)
@@ -118,5 +119,4 @@ func main() {
 	dw := DirectoryWatcher{"./", TriggerChannel}
 	go dw.Watch()
 	setupHandlers()
-	//handleHttp()
 }

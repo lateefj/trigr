@@ -7,7 +7,6 @@ import (
 	"bitbucket.org/lateefj/httphacks"
 	"github.com/GeertJohan/go.rice"
 	log "github.com/Sirupsen/logrus"
-	"github.com/julienschmidt/httprouter"
 	"golang.org/x/net/websocket"
 )
 
@@ -19,27 +18,6 @@ var (
 func init() {
 	ui = rice.MustFindBox("ui").HTTPBox()
 	bower = rice.MustFindBox("ui/bower_components").HTTPBox()
-
-}
-
-func statusHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-
-	ClientsConnected.Send("Status being checked")
-	w.Header().Set("Content-Type", "application/json")
-	w.Write([]byte(`{"status":"Happy happy joy joy!"}`))
-}
-
-// Someday maybe move to a faster router
-func handleHttp() {
-	router := httprouter.New()
-	router.ServeFiles("/", ui)
-	router.ServeFiles("/bower", bower)
-	router.GET("/api/status", statusHandler)
-	router.GET("/ws", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		//fn := websocket.Handler(PublishTrigger)
-		//fn(w, r)
-	})
-	http.ListenAndServe(":8080", router)
 }
 
 func setupHandlers() {

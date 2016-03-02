@@ -39,9 +39,9 @@ dsl.env = {
     pipe_out.Write(string.format(fmt, ...))
   end,
   trig = trig,
-  pipe_out = pipe_out,
-  pipe_in = pipe_in
-
+  double = double,
+  trig_log = trig_log,
+  trig_error = trig_error
 }
 
 return dsl
