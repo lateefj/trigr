@@ -7,6 +7,8 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/lateefj/trigr"
 	"golang.org/x/exp/inotify"
+	"os"
+	"path/filepath"
 )
 
 type DirectoryWatcher struct {
@@ -20,11 +22,25 @@ func (dw *DirectoryWatcher) Watch() error {
 		log.Error(err)
 		return err
 	}
-	err = watcher.Watch(dw.Path)
+	/*err = watcher.Watch(dw.Path)
 	if err != nil {
 		log.Error(err)
 		return err
-	}
+	}*/
+	filepath.Walk(dw.Path, func(newPath string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if info.IsDir() {
+			err = watcher.AddWatch(newPath, inotify.IN_CLOSE_WRITE)
+			if err != nil {
+				log.Error(err)
+				return err
+			}
+		}
+		return nil
+	})
 	for {
 		select {
 		case ev := <-watcher.Event:

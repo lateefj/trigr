@@ -23,7 +23,7 @@ function dsl.run_with_env(env, fn, ...)
   fn(...)
 end
 
-
+-- Everything must be expose through this DSL
 dsl.env = {
   move = function(ops)
     print("I moved to", ops[1], ops[2])
