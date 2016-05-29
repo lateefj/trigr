@@ -84,6 +84,24 @@ func NewPipeline() *Pipeline {
 	}
 }
 
+// Build
+type Build struct {
+	Id     string  `json:"id"`
+	Commit *Commit `json:"commit"`
+}
+
+// Commit
+type Commit struct {
+	Hash   string  `json:"hash"`
+	Branch *Branch `json:"branch"`
+}
+
+// Branch
+type Branch struct {
+	Name    string   `json:"name"`
+	Project *Project `json:"branch"`
+}
+
 // Project
 type Project struct {
 	Name     string    `json:"name"`   // Project name
@@ -107,7 +125,6 @@ func LoadProject(path string) (Project, error) {
 	}
 	err = json.Unmarshal(bits, &p)
 	return p, err
-
 }
 
 // Get a paginated list of the history of triggers for the project

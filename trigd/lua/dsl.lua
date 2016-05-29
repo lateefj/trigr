@@ -25,21 +25,16 @@ end
 
 -- Everything must be expose through this DSL
 dsl.env = {
-  move = function(ops)
-    print("I moved to", ops[1], ops[2])
-  end,
-  speak = function(message)
-    print("I said:", message)
-  end,
+  string = string,
+  io = io,
+  os = os,
   print = function(...)
     print(...)
   end,
   console = function(fmt, ...)
-    print(string.format(fmt, ...))
-    pipe_out.Write(string.format(fmt, ...))
+    tring_log(string.format(fmt, ...))
   end,
   trig = trig,
-  double = double,
   trig_log = trig_log,
   trig_error = trig_error
 }
