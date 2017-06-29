@@ -3,6 +3,7 @@
 package trigr
 
 import (
+	"context"
 	"encoding/json"
 	"io/ioutil"
 	"log"
@@ -38,10 +39,11 @@ type Trigger struct {
 	Type      string                 `json:"type"`      // Type of trigger event
 	Data      map[string]interface{} `json:"data"`      // Additional data associated
 	Logs      chan *Log              `json:"-"`
+	Context   context.Context        `json:"-"`
 }
 
-func NewTrigger(t string, data map[string]interface{}) Trigger {
-	return Trigger{Timestamp: milli(), Type: t, Data: data}
+func NewTrigger(t string, data map[string]interface{}) *Trigger {
+	return &Trigger{Timestamp: milli(), Type: t, Data: data, Context: context.Background()}
 }
 
 func (t *Trigger) Marshal() ([]byte, error) {

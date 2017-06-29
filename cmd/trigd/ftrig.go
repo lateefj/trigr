@@ -4,11 +4,12 @@ package main
 
 import (
 	"fmt"
-	log "github.com/Sirupsen/logrus"
-	"github.com/lateefj/trigr"
-	"golang.org/x/exp/inotify"
 	"os"
 	"path/filepath"
+
+	log "github.com/Sirupsen/logrus"
+	"github.com/fsnotify/fsnotify"
+	"github.com/lateefj/trigr"
 )
 
 type DirectoryWatcher struct {
@@ -17,7 +18,7 @@ type DirectoryWatcher struct {
 }
 
 func (dw *DirectoryWatcher) Watch() error {
-	watcher, err := inotify.NewWatcher()
+	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		log.Error(err)
 		return err
@@ -33,7 +34,7 @@ func (dw *DirectoryWatcher) Watch() error {
 		}
 
 		if info.IsDir() {
-			err = watcher.AddWatch(newPath, inotify.IN_CLOSE_WRITE)
+			err = watcher.Add(newPath)
 			if err != nil {
 				log.Error(err)
 				return err
