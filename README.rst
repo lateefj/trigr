@@ -8,7 +8,7 @@ trigr
 Who needs another build system?
 -------------------------------
 
-TLDR: Me and hopefully you!
+TLDR: What if there was a build system that was distributed? Moving from central source control from csv / svn to git / mecurial.
 
 Waiting for remote build fails suck! It would be nice to use the extra resources sitting on the average developer machine to automatically compile, test and package applications while sitting in a meeting or at lunch.
 

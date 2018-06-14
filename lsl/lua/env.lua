@@ -4,6 +4,7 @@ lsl.env = {
   string = string,
   io = io,
   os = os,
+  print = print,
   log = log,
   require = require,  -- XXX for testing
   module = module, -- XXX for testing

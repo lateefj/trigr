@@ -11,19 +11,19 @@ import (
 )
 
 var (
-	ui    http.FileSystem
-	bower http.FileSystem
+	ui http.FileSystem
+	//bower http.FileSystem
 )
 
 func init() {
 	ui = rice.MustFindBox("ui").HTTPBox()
-	bower = rice.MustFindBox("ui/bower_components").HTTPBox()
+	//bower = rice.MustFindBox("ui/bower_components").HTTPBox()
 }
 
 func setupHandlers() {
 
 	http.Handle("/", http.FileServer(ui))
-	http.Handle("/bower_components", http.FileServer(bower))
+	//http.Handle("/bower_components", http.FileServer(bower))
 	http.HandleFunc("/api/status", httphacks.TimeWrap(func(w http.ResponseWriter, r *http.Request) {
 		ClientsConnected.Send("Status being checked")
 		w.Header().Set("Content-Type", "application/json")
