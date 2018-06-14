@@ -32,6 +32,12 @@ func init() {
 	}
 }
 
+// OutputWriter ... function for writing
+type OutputWriter func(txt string)
+
+// InputReader ... function for reading input
+type InputReader func() string
+
 // LuaLog ...  Log capture system
 type LuaLog struct {
 	Output io.Writer
@@ -59,7 +65,7 @@ func (ll *LuaLog) Debug(txt string) {
 func (ll *LuaLog) Log(v interface{}) {
 	msg := fmt.Sprintf("%v\n", v)
 	log.Print(msg)
-	ll.Output.Write([]byte(msg))
+	//ll.Output.Write([]byte(msg))
 }
 
 // LuaLoader ... Simple loader system
@@ -102,7 +108,7 @@ func (ll *LuaLoader) BuildEnv() {
 	ll.SetGlobalVar("log_info", luar.New(ll.State, ll.Log.Info))
 	ll.SetGlobalVar("log_error", luar.New(ll.State, ll.Log.Error))
 	ll.SetGlobalVar("log", luar.New(ll.State, ll.Log.Log))
-	ll.SetGlobalVar("print", luar.New(ll.State, ll.Log.Log))
+	//ll.SetGlobalVar("print", luar.New(ll.State, ll.Log.Log))
 	ll.State.SetGlobal("env_map", luar.New(ll.State, ll.EnvMap))
 	ll.envBuilt = true
 }

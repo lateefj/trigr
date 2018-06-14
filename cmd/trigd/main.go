@@ -1,14 +1,14 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
-	//"io/ioutil"
+	"log"
 	"os"
 	"sync/atomic"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/lateefj/trigr"
 	"github.com/lateefj/trigr/ext"
 	"golang.org/x/net/websocket"
@@ -22,11 +22,11 @@ type TriggerExec struct {
 
 var (
 	messageCount   int64
-	TriggerChannel chan trigr.Trigger
+	TriggerChannel chan *trigr.Trigger
 )
 
 func init() {
-	TriggerChannel = make(chan trigr.Trigger)
+	TriggerChannel = make(chan *trigr.Trigger)
 }
 
 func ReadMessages(ws *websocket.Conn) {
@@ -50,14 +50,14 @@ func PublishTrigger(ws *websocket.Conn) {
 	var reply string
 	err := websocket.Message.Receive(ws, &reply)
 	if err != nil {
-		log.Errorf("Error %s receiving reply", err)
+		log.Printf("Error: %s receiving reply", err)
 		return
 	}
-	log.Debug("Received back from client trigr: " + reply)
-	var t trigr.Trigger
-	err = json.Unmarshal([]byte(reply), &t)
+	log.Println("Received back from client trigr: " + reply)
+	var t *trigr.Trigger
+	err = json.Unmarshal([]byte(reply), t)
 	if err != nil {
-		log.Errorf("Failed to unmarshal %s", err)
+		log.Printf("Failed: to unmarshal %s", err)
 		return
 	}
 	handleTrigger(t)
@@ -69,53 +69,57 @@ func PublishTrigger(ws *websocket.Conn) {
 		}
 
 		if err != nil {
-			log.Errorf("Error %s receiving reply", err)
+			log.Printf("Error %s receiving reply\n", err)
 			break
 		}
-		log.Debug("Received back from client: " + reply)
+		log.Println("Received back from client: " + reply)
 		atomic.AddInt64(&messageCount, 1)
 		err = json.Unmarshal([]byte(reply), &tl)
 		if err != nil {
-			log.Errorf("Failed to unmarshal log %s", err)
+			log.Printf("Failed: to unmarshal log %s", err)
 			continue
 		}
 	}
 }
 
-func handleTrigger(t trigr.Trigger) {
-	in, out, err := os.Pipe()
-	if err != nil {
-		log.Errorf("Failed to get a pipe %s", err)
-		return
-	}
-	luaPath := fmt.Sprintf("%s.lua", t.Type)
-	log.Debugf("Lua loading file %s", luaPath)
+func handleTrigger(t *trigr.Trigger) {
+	in := bytes.NewBufferString("")
+	out := bytes.NewBufferString("")
+	// TODO: Should make this configurable
+	luaPath := fmt.Sprintf("./.trigr/%s.lua", t.Type)
+	log.Printf("Lua loading file %s\n", luaPath)
 	if _, err := os.Stat(luaPath); err == nil {
-
-		l := ext.NewLuaDslLoader(in, out, "./lua")
-		err = l.RunDsl(luaPath, &t, make(chan *trigr.Trigger))
+		// TODO: Lua dependent files should embedded into the binary
+		l := ext.NewTrigSL(in, out, "./lsl/lua")
+		l.SetGlobalVar("trig", t)
+		fmt.Printf("Working on path %s\n", luaPath)
+		err = l.RunFile(luaPath, t, make(chan *trigr.Trigger))
 		if err != nil {
-			log.Errorf("Failed ot run dsl %s", err)
+			log.Printf("Failed to run dsl %s\n", err)
 		}
+		fmt.Printf(out.String())
+		fmt.Printf("Don running the file\n")
 	}
 }
 
 func main() {
 	messageCount = 0
-	log.SetLevel(log.DebugLevel)
-	log.Debug("Hmmmmm starting trigrd")
+	log.Printf("Hmmmmm starting trigrd\n")
 	go func() {
 		for t := range TriggerChannel {
 
-			handleTrigger(t)
-			b, err := json.Marshal(t)
-			if err != nil {
-				log.Errorf("Failed to marshal trigger %s", err)
-			}
-			ClientsConnected.Send(string(b))
+			go func() {
+				handleTrigger(t)
+				b, err := json.Marshal(t)
+				if err != nil {
+					log.Printf("Failed to marshal trigger %s\n", err)
+				}
+				ClientsConnected.Send(string(b))
+			}()
 		}
 	}()
 
+	// Default watch current directory
 	dw := DirectoryWatcher{"./", TriggerChannel}
 	go dw.Watch()
 	setupHandlers()
