@@ -23,8 +23,8 @@ func main() {
 	t := trigr.NewTrigger("test", make(map[string]interface{}))
 	if _, err := os.Stat(luaPath); err == nil {
 
-		l := ext.NewLuaDslLoader(in, out, "./ext/lua")
-		err = l.RunDslFile(luaPath, &t, make(chan *trigr.Trigger))
+		l := ext.NewTrigSL(in, out, "./ext/lua")
+		err = l.RunFile(luaPath, t, make(chan *trigr.Trigger))
 		if err != nil {
 			log.Errorf("Failed ot run dsl %s", err)
 		}

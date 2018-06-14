@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	//"io/ioutil"
 	"os"
 	"sync/atomic"
 
@@ -22,11 +21,11 @@ type TriggerExec struct {
 
 var (
 	messageCount   int64
-	TriggerChannel chan trigr.Trigger
+	TriggerChannel chan *trigr.Trigger
 )
 
 func init() {
-	TriggerChannel = make(chan trigr.Trigger)
+	TriggerChannel = make(chan *trigr.Trigger)
 }
 
 func ReadMessages(ws *websocket.Conn) {
@@ -54,8 +53,8 @@ func PublishTrigger(ws *websocket.Conn) {
 		return
 	}
 	log.Debug("Received back from client trigr: " + reply)
-	var t trigr.Trigger
-	err = json.Unmarshal([]byte(reply), &t)
+	var t *trigr.Trigger
+	err = json.Unmarshal([]byte(reply), t)
 	if err != nil {
 		log.Errorf("Failed to unmarshal %s", err)
 		return
@@ -82,7 +81,7 @@ func PublishTrigger(ws *websocket.Conn) {
 	}
 }
 
-func handleTrigger(t trigr.Trigger) {
+func handleTrigger(t *trigr.Trigger) {
 	in, out, err := os.Pipe()
 	if err != nil {
 		log.Errorf("Failed to get a pipe %s", err)
@@ -92,8 +91,8 @@ func handleTrigger(t trigr.Trigger) {
 	log.Debugf("Lua loading file %s", luaPath)
 	if _, err := os.Stat(luaPath); err == nil {
 
-		l := ext.NewLuaDslLoader(in, out, "./lua")
-		err = l.RunDsl(luaPath, &t, make(chan *trigr.Trigger))
+		l := ext.NewTrigSL(in, out, "./lua")
+		err = l.RunFile(luaPath, t, make(chan *trigr.Trigger))
 		if err != nil {
 			log.Errorf("Failed ot run dsl %s", err)
 		}

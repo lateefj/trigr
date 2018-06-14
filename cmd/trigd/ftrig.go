@@ -14,7 +14,7 @@ import (
 
 type DirectoryWatcher struct {
 	Path           string
-	TriggerChannel chan trigr.Trigger
+	TriggerChannel chan *trigr.Trigger
 }
 
 func (dw *DirectoryWatcher) Watch() error {
@@ -44,8 +44,8 @@ func (dw *DirectoryWatcher) Watch() error {
 	})
 	for {
 		select {
-		case ev := <-watcher.Event:
-			if ev.Mask == inotify.IN_CLOSE_WRITE {
+		case ev := <-watcher.Events:
+			if ev.Op == fsnotify.Write {
 				d := map[string]interface{}{
 					"path": fmt.Sprintf("%s%s", dw.Path, ev.Name),
 				}
@@ -54,7 +54,7 @@ func (dw *DirectoryWatcher) Watch() error {
 				dw.TriggerChannel <- t
 				log.Debugf("Write event: %v", ev)
 			}
-		case err := <-watcher.Error:
+		case err := <-watcher.Errors:
 			log.Println("error:", err)
 		}
 	}

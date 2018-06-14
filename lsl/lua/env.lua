@@ -4,6 +4,7 @@ lsl.env = {
   string = string,
   io = io,
   os = os,
+  log = log,
   require = require,  -- XXX for testing
   module = module, -- XXX for testing
 }
@@ -28,6 +29,9 @@ function run_file_with_env(path)
 	lsl.run_with_env(lsl.env, file)
 end
 
+local function log_output(...)
+  log(string.format(...))
+end
 -- For running tests
 function run_test_with_env(path, test_path, ...)
   test = utest()

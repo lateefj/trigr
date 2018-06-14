@@ -32,6 +32,12 @@ func init() {
 	}
 }
 
+// OutputWriter ... function for writing
+type OutputWriter func(txt string)
+
+// InputReader ... function for reading input
+type InputReader func() string
+
 // LuaLog ...  Log capture system
 type LuaLog struct {
 	Output io.Writer

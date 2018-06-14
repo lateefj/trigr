@@ -22,6 +22,7 @@ func TestRunCode(t *testing.T) {
 	data := make(map[string]interface{})
 	tig := trigr.NewTrigger("file", data)
 	tig.Logs = make(chan *trigr.Log, 1)
+	defer close(tig.Logs)
 	tstream := make(chan *trigr.Trigger, 0)
 	err := loader.RunCode("log('code test')", tig, tstream)
 	if err != nil {
@@ -30,7 +31,6 @@ func TestRunCode(t *testing.T) {
 	if writeBuff.String() != "code test\n" {
 		t.Fatal("Failed to write code test to out")
 	}
-	fmt.Printf("Now going to waith on logs .....\n")
 	l, more := <-tig.Logs
 	if !more {
 		t.Fatal("Channel closed before first log message is on it....")
@@ -41,7 +41,6 @@ func TestRunCode(t *testing.T) {
 	if writeBuff.String() != "code test\n" {
 		t.Fatalf("Failed to do any logging expected \n'code test\n'\n and got \n'%s'", writeBuff.String())
 	}
-	fmt.Printf("Done with log test ....\n")
 }
 
 func TestRunTest(t *testing.T) {
@@ -80,6 +79,7 @@ end`)
 	cleanupFiles = append(cleanupFiles, testFilePath)
 	testFile.WriteString(`local ext = require "examplet"
 test.example_pass = function() 
+	log("test")
 	local v = ext.add(1, 2)
 	test.equal(v, 3)
 end
@@ -89,26 +89,26 @@ end
 	if err != nil {
 		t.Fatalf("Failed to run test %s", err)
 	}
-	for {
-		l, more := <-tig.Logs
-		if !more {
-			t.Fatal("Failed to find successful log")
-		}
-		fmt.Printf("log is %s\n", l.Text)
-		if strings.Contains(l.Text, "PASSED") {
-			break
-		}
-	}
-
 	output := writeBuff.String()
 	if !strings.Contains(output, "PASSED") {
 		t.Errorf("Expected successful test but output is \n%s", output)
 	}
+	for {
+		l, more := <-tig.Logs
+		fmt.Printf("Checking if there are more logs \n")
+		if !more {
+			t.Fatal("Failed to find successful log")
+		}
+		if strings.Contains(l.Text, "test") {
+			break
+		}
+	}
+
 	writeBuff.Reset()
-	fmt.Printf("done with first passing test \n")
 	// Write a failing test
 	testFile.WriteAt([]byte(`local ext = require "examplet"
 test.example_fail = function() 
+	log("test failure")
 	local v = ext.add(1, 1)
 	test.equal(v, 3)
 end
@@ -128,7 +128,7 @@ end
 		if !more {
 			t.Fatal("Failed to find failed log")
 		}
-		if strings.Contains(l.Text, "FAILED") {
+		if strings.Contains(l.Text, "test failure") {
 			break
 		}
 	}

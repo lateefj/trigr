@@ -1,22 +1,49 @@
- SHELL := /bin/bash
+SHELL := /bin/bash -x
+TRIGRD_APP := trigd
+TRIGRT_APP := trigr
+VERSION := `cat VERSION`
 
+# Support binary builds
+PLATFORMS := linux darwin freebsd
 
-all: build ui-build embed
+all: build
 
 .PHONY: clean
 clean:
-	rm bin/*
+	rm -fr build 
+	echo $(PLATFORMS)
+	@- $(foreach PLAT,$(PLATFORMS), \
+		mkdir -p build/$(PLAT) \
+		)
+
+deps:
+	# Someday switch to vgo once it works with the code
+	# go get -u golang.org/x/vgo
+
+	# vgo build
+
+	go get -u github.com/golang/dep/cmd/dep
+
+vendor: deps
+	dep ensure
+
+.PHONY: build
+build: clean 
+	for app in $(TRIGRD_APP) $(TRIGRT_APP); do \
+		cd cmd/$$app ; \
+		for plat in $(PLATFORMS); do \
+			echo "Building '$$app' for platform '$$plat' ..." ; \
+			GOARCH=amd64 GOOS=$$plat go build -ldflags "-s -w" -o ../../build/$$plat/$$app ; \
+		done; \
+		cd ../../; \
+	done
 
 .PHONY: test
-test:
+test: 
 	go test ./...
 
-build: 
-	mkdir -p bin
-	# Linux build
-	GOARCH=amd64 GOOS=linux gb build
-	# OS X build
-	GOARCH=amd64 GOOS=darwin gb build 
-
+.PHONY: test-integration
+test-integration: 
+	go test ./... --tags=integration
 
 
