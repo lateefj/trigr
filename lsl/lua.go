@@ -108,7 +108,6 @@ func (ll *LuaLoader) BuildEnv() {
 	ll.SetGlobalVar("log_info", luar.New(ll.State, ll.Log.Info))
 	ll.SetGlobalVar("log_error", luar.New(ll.State, ll.Log.Error))
 	ll.SetGlobalVar("log", luar.New(ll.State, ll.Log.Log))
-	//ll.SetGlobalVar("print", luar.New(ll.State, ll.Log.Log))
 	ll.State.SetGlobal("env_map", luar.New(ll.State, ll.EnvMap))
 	ll.envBuilt = true
 }
