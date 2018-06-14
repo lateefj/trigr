@@ -65,7 +65,7 @@ func (ll *LuaLog) Debug(txt string) {
 func (ll *LuaLog) Log(v interface{}) {
 	msg := fmt.Sprintf("%v\n", v)
 	log.Print(msg)
-	//ll.Output.Write([]byte(msg))
+	ll.Output.Write([]byte(msg))
 }
 
 // LuaLoader ... Simple loader system
