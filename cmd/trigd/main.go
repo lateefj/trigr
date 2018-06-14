@@ -85,9 +85,11 @@ func PublishTrigger(ws *websocket.Conn) {
 func handleTrigger(t *trigr.Trigger) {
 	in := bytes.NewBufferString("")
 	out := bytes.NewBufferString("")
+	// TODO: Should make this configurable
 	luaPath := fmt.Sprintf("./.trigr/%s.lua", t.Type)
 	log.Printf("Lua loading file %s\n", luaPath)
 	if _, err := os.Stat(luaPath); err == nil {
+		// TODO: Lua dependent files should embedded into the binary
 		l := ext.NewTrigSL(in, out, "./lsl/lua")
 		l.SetGlobalVar("trig", t)
 		fmt.Printf("Working on path %s\n", luaPath)
