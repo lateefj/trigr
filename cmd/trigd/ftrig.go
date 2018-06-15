@@ -5,14 +5,34 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/lateefj/trigr"
 )
 
+var (
+	scmDirs = []string{".git", ".hg", ".cvs", ".svn"}
+)
+
+// Helper to match any source control paths
+func isSCMPath(path string) bool {
+	for _, d := range scmDirs {
+		if strings.Contains(path, d) {
+			return true
+		}
+	}
+	return false
+}
+
 type DirectoryWatcher struct {
 	Path           string
 	TriggerChannel chan *trigr.Trigger
+	ExcludeSCM     bool
+}
+
+func NewDirectoryWatcher(path string, trigChan chan *trigr.Trigger, excludeSCM bool) *DirectoryWatcher {
+	return &DirectoryWatcher{Path: path, TriggerChannel: trigChan, ExcludeSCM: excludeSCM}
 }
 
 func (dw *DirectoryWatcher) Watch() error {
@@ -24,6 +44,10 @@ func (dw *DirectoryWatcher) Watch() error {
 	filepath.Walk(dw.Path, func(newPath string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
+		}
+		// Exclude source control management
+		if dw.ExcludeSCM && isSCMPath(newPath) {
+			return nil
 		}
 		if info.IsDir() {
 			err = watcher.Add(newPath)

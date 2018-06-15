@@ -91,6 +91,7 @@ func handleTrigger(t *trigr.Trigger) {
 	if _, err := os.Stat(luaPath); err == nil {
 		// TODO: Lua dependent files should embedded into the binary
 		l := ext.NewTrigSL(in, out, "./lsl/lua")
+		// Add the trig event to the context
 		l.SetGlobalVar("trig", t)
 		fmt.Printf("Working on path %s\n", luaPath)
 		err = l.RunFile(luaPath, t, make(chan *trigr.Trigger))
@@ -104,7 +105,7 @@ func handleTrigger(t *trigr.Trigger) {
 
 func main() {
 	messageCount = 0
-	log.Printf("Hmmmmm starting trigrd\n")
+	log.Printf("Starting trigd\n")
 	go func() {
 		for t := range TriggerChannel {
 
@@ -120,7 +121,7 @@ func main() {
 	}()
 
 	// Default watch current directory
-	dw := DirectoryWatcher{"./", TriggerChannel}
+	dw := NewDirectoryWatcher("./", TriggerChannel, true)
 	go dw.Watch()
 	setupHandlers()
 }

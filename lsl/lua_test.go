@@ -49,6 +49,7 @@ func TestLuaLoader(t *testing.T) {
 		t.Fatalf("Failed to do any logging expected 'Test' and got %s", writeBuff.String())
 	}
 	writeBuff.Reset()
+	// Simple log test
 	err := loader.Code("log('code test')")
 	if err != nil {
 		t.Fatalf("Failed to run code %s", err)

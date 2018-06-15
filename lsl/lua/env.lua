@@ -2,6 +2,7 @@
 local lsl = {}
 lsl.env = {
   string = string,
+  pairs = pairs,
   io = io,
   os = os,
   print = print,
@@ -26,13 +27,20 @@ end
 
 -- For running a file
 function run_file_with_env(path)
+  -- Get the filename
+  local filename = string.gsub(path, "(.*/)(.*)", "%2") 
+  -- Now the basepath
+  local basepath = string.sub(path, 0, #path - #filename)
+  -- Add the basepath to the lua package
+  package.path = package.path .. ";" .. basepath .. "/?.lua"
 	local file = assert(loadfile(path))
 	lsl.run_with_env(lsl.env, file)
 end
 
-local function log_output(...)
-  log(string.format(...))
+function log(...)
+  log_output(string.format(...))
 end
+
 -- For running tests
 function run_test_with_env(path, test_path, ...)
   test = utest()
