@@ -37,9 +37,6 @@ function run_file_with_env(path)
 	lsl.run_with_env(lsl.env, file)
 end
 
-function log(...)
-  log_output(string.format(...))
-end
 
 -- For running tests
 function run_test_with_env(path, test_path, ...)

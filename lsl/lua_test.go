@@ -88,6 +88,7 @@ end`)
 		t.Fatalf("Failed to create file %s", testFilePath)
 	}
 	defer testFile.Close()
+
 	cleanupFiles = append(cleanupFiles, testFilePath)
 	testFile.WriteString(`local ext = require "examplet"
 test.example_pass = function() 
