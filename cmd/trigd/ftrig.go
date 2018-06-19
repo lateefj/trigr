@@ -12,6 +12,7 @@ import (
 )
 
 var (
+	// Ignore directories
 	scmDirs = []string{".git", ".hg", ".cvs", ".svn"}
 )
 
@@ -30,7 +31,7 @@ type DirectoryWatcher struct {
 	TriggerChannel chan *trigr.Trigger
 	ExcludeSCM     bool
 }
-Add functions
+
 func NewDirectoryWatcher(path string, trigChan chan *trigr.Trigger, excludeSCM bool) *DirectoryWatcher {
 	return &DirectoryWatcher{Path: path, TriggerChannel: trigChan, ExcludeSCM: excludeSCM}
 }
@@ -78,7 +79,7 @@ func (dw *DirectoryWatcher) Watch() error {
 			}
 			t := trigr.NewTrigger("file", d)
 			dw.TriggerChannel <- t
-			log.Printf("Write event: %v\n", ev)
+			//log.Printf("Write event: %v\n", ev)
 		case err := <-watcher.Errors:
 			log.Printf("ERROR: %s\n", err)
 		}

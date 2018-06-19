@@ -19,7 +19,10 @@ if contains(supported_ops, trig.Data["op"]) and gobuild.is_go_source(file_path) 
   -- Run the build command
   print("Done handling go source")
 end
-print(string.format("Type: %s", trig.Type))
-print(string.format("Path: %s", trig.Data["path"]))
-print(string.format("Operation: %s", trig.Data["op"]))
+
+print(string.format("Trig Type: %s", trig.Type))
+print("Trig Data key : value")
+for k, v in trig.Data() do
+  print(string.format("\t%s : %v", k, v))
+end
 

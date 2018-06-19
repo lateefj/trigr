@@ -93,13 +93,11 @@ func handleTrigger(t *trigr.Trigger) {
 		l := ext.NewTrigSL(in, out, "./lsl/lua")
 		// Add the trig event to the context
 		l.SetGlobalVar("trig", t)
-		fmt.Printf("Working on path %s\n", luaPath)
 		err = l.RunFile(luaPath, t, make(chan *trigr.Trigger))
 		if err != nil {
 			log.Printf("Failed to run dsl %s\n", err)
 		}
 		fmt.Printf(out.String())
-		fmt.Printf("Don running the file\n")
 	}
 }
 
