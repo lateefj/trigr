@@ -26,7 +26,7 @@ var (
 )
 
 func init() {
-	TriggerChannel = make(chan *trigr.Trigger)
+	TriggerChannel = make(chan *trigr.Trigger, 0)
 }
 
 func ReadMessages(ws *websocket.Conn) {

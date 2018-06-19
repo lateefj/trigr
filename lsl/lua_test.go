@@ -116,6 +116,7 @@ test.example_fail = function()
 end
 `), 0)
 	testFile.Sync()
+
 	err = loader.Test(testFilePath)
 	if err != nil {
 		t.Fatalf("Failed test did with error %s", err)

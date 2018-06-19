@@ -2,7 +2,7 @@
 trigr
 =====
 
-![Vetula](https://c1.staticflickr.com/1/246/449673647_4d9a1b900e.jpg)
+.. image:: https://c1.staticflickr.com/1/246/449673647_4d9a1b900e.jpg
 
 
 Who needs another build system?

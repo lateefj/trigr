@@ -1,15 +1,5 @@
 -- Explicate exposure or no worky
 local lsl = {}
-lsl.env = {
-  string = string,
-  pairs = pairs,
-  io = io,
-  os = os,
-  print = print,
-  log = log,
-  require = require,  -- XXX for testing
-  module = module, -- XXX for testing
-}
 
 function lsl.run_with_env(env, fn, ...)
 	for k, v in env_map() do
@@ -51,5 +41,30 @@ function run_test_with_env(path, test_path, ...)
   -- Print out the summary of results
   test.summary()
 end
+
+-- Function to check item is in an array
+local function contains(arr, item)
+  for index, value in ipairs(arr) do
+    if value == item then
+      return true
+    end
+  end
+  return false
+end
+
+-- Configure the environment variable
+lsl.env = {
+  string = string,
+  pairs = pairs,
+  io = io,
+  os = os,
+  print = print,
+  log = log,
+  contains = contains,
+  require = require,  -- XXX for testing
+  module = module, -- XXX for testing
+}
+
+
 
 return lsl

@@ -12,7 +12,9 @@ import (
 )
 
 var (
-	luaBox     packr.Box
+	// Embed Lua source code
+	luaBox packr.Box
+	// Embed Lua test framework
 	uTestBox   packr.Box
 	lslFrame   string
 	uTestFrame string

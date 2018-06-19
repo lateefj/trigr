@@ -2,25 +2,24 @@
 -- Import go build module
 local gobuild = require "gobuild"
 
+-- Get the path from the trigger event data
 local file_path = trig.Data["path"]
 
+-- Get the filename
 local filename = string.gsub(file_path, "(.*/)(.*)", "%2") 
 -- Now the basepath
 local basepath = string.sub(file_path, 0, #file_path - #filename)
+-- List of supported file operations
+local supported_ops = { 'write', 'create', 'remove' }
+
+print(contains)
+
 -- If the extension is a go file then do custom commands
-if gobuild.is_go_source(file_path) then
+if contains(supported_ops, trig.Data["op"]) and gobuild.is_go_source(file_path) then
   -- Run test in directory
-  local test_output = gobuild.run_tests(basepath)
-  print(test_output)
+  print(gobuild.run_tests(basepath))
   -- Run the build command
-  [[--local m = io.popen("make build")
-  print(m:read("*a"))
-  m:close()
-  -- Run the test command
-  local test_make = io.popen("make test")
-  print(test_make:read("*a"))
-  test_make:close()--]]
-  print("Done")
+  print("Done handling go source")
 end
 print(string.format("Type: %s", trig.Type))
 print(string.format("Path: %s", trig.Data["path"]))

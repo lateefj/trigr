@@ -30,7 +30,7 @@ type DirectoryWatcher struct {
 	TriggerChannel chan *trigr.Trigger
 	ExcludeSCM     bool
 }
-
+Add functions
 func NewDirectoryWatcher(path string, trigChan chan *trigr.Trigger, excludeSCM bool) *DirectoryWatcher {
 	return &DirectoryWatcher{Path: path, TriggerChannel: trigChan, ExcludeSCM: excludeSCM}
 }
@@ -71,6 +71,8 @@ func (dw *DirectoryWatcher) Watch() error {
 				d["op"] = "create"
 			} else if ev.Op == fsnotify.Remove {
 				d["op"] = "remove"
+			} else if ev.Op == fsnotify.Chmod {
+				d["op"] = "chmod"
 			}
 			t := trigr.NewTrigger("file", d)
 			dw.TriggerChannel <- t
