@@ -12,8 +12,6 @@ local basepath = string.sub(file_path, 0, #file_path - #filename)
 -- List of supported file operations
 local supported_ops = { 'write', 'create', 'remove' }
 
-print(contains)
-
 -- If the extension is a go file then do custom commands
 if contains(supported_ops, trig.Data["op"]) and gobuild.is_go_source(file_path) then
   -- Run test in directory
