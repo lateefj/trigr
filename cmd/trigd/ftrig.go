@@ -73,6 +73,8 @@ func (dw *DirectoryWatcher) Watch() error {
 				d["op"] = "remove"
 			} else if ev.Op == fsnotify.Chmod {
 				d["op"] = "chmod"
+			} else if ev.Op == fsnotify.Rename {
+				d["op"] = "rename"
 			}
 			t := trigr.NewTrigger("file", d)
 			dw.TriggerChannel <- t
