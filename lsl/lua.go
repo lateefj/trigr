@@ -105,6 +105,11 @@ func (ll *LuaLoader) BuildEnv() {
 	if err != nil {
 		log.Fatalf("Failed to load lsl framework %s", err)
 	}
+	ut, err := ll.State.LoadString(uTestFrame)
+	if err != nil {
+		log.Fatalf("Failed to load u-test framework %s", err)
+	}
+	ll.State.SetGlobal("utest", ut)
 	// Log wrappers
 	ll.SetGlobalVar("log_debug", luar.New(ll.State, ll.Log.Debug))
 	ll.SetGlobalVar("log_info", luar.New(ll.State, ll.Log.Info))
@@ -141,11 +146,6 @@ func (ll *LuaLoader) Test(path string) error {
 		ll.Output.Write([]byte(msg))
 	}))
 
-	ut, err := ll.State.LoadString(uTestFrame)
-	if err != nil {
-		log.Fatalf("Failed to load u-test framework %s", err)
-	}
-	ll.State.SetGlobal("utest", ut)
 	ll.BuildEnv()
 	testPath := filepath.Dir(path)
 	return ll.State.CallByParam(lua.P{

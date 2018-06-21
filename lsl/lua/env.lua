@@ -1,7 +1,8 @@
 -- Explicate exposure or no worky
 local lsl = {}
 
-function lsl.run_with_env(env, fn, ...)
+-- Run function in environment
+function run_with_env(env, fn, ...)
 	for k, v in env_map() do
 		env[k] = v
 	end
@@ -9,11 +10,15 @@ function lsl.run_with_env(env, fn, ...)
 	fn(...)
 end
 
+lsl.run_with_env = run_with_env
+
 -- For running a string
 function run_code_with_env(code)
 	local fn = assert(loadstring(code))
-	lsl.run_with_env(lsl.env, fn)
+	run_with_env(lsl.env, fn)
 end
+
+lsl.run_code_with_env = run_code_with_env
 
 -- For running a file
 function run_file_with_env(path)
@@ -24,9 +29,10 @@ function run_file_with_env(path)
   -- Add the basepath to the lua package
   package.path = package.path .. ";" .. basepath .. "/?.lua"
 	local file = assert(loadfile(path))
-	lsl.run_with_env(lsl.env, file)
+	run_with_env(lsl.env, file)
 end
 
+lsl.run_file_with_env = run_file_with_env
 
 -- For running tests
 function run_test_with_env(path, test_path, ...)
@@ -34,7 +40,9 @@ function run_test_with_env(path, test_path, ...)
   lsl.env.test = test
   lsl.env.test_path = test_path
 
-  package.path = package.path .. ";" .. test_path .. "/?.lua"
+  if test_path ~= nil then
+    package.path = package.path .. ";" .. test_path .. "/?.lua"
+  end
   run_file_with_env(path, ...)
   -- Call for the results of the test
   local tests, failed =  test.result()
@@ -42,8 +50,10 @@ function run_test_with_env(path, test_path, ...)
   test.summary()
 end
 
+lsl.run_test_with_env = run_test_with_env
+
 -- Function to check item is in an array
-local function contains(arr, item)
+function contains(arr, item)
   for index, value in ipairs(arr) do
     if value == item then
       return true
@@ -51,6 +61,8 @@ local function contains(arr, item)
   end
   return false
 end
+
+lsl.contains = contains
 
 -- Configure the environment variable
 lsl.env = {
@@ -61,10 +73,9 @@ lsl.env = {
   print = print,
   log = log,
   contains = contains,
+  run_test_with_env = run_test_with_env,
   require = require,  -- XXX for testing
   module = module, -- XXX for testing
 }
-
-
 
 return lsl

@@ -1,21 +1,21 @@
--- Create gobuild package
-local gobuild = {}
+-- Create gotools package
+local gotools = {}
 
 -- Go extension
-gobuild.go_extension = ".go"
+gotools.go_extension = ".go"
 -- Check to see if file is a go source code
-function gobuild.is_go_source(file_path)
+function gotools.is_go_source(file_path)
   -- Get the extension
   local extension = string.sub(file_path, #file_path-2, #file_path)
   -- Check to see if the extension matches
-  if extension == gobuild.go_extension then
+  if extension == gotools.go_extension then
     return true
   end
   return false
 end
 
 -- Run test for a directory
-function gobuild.run_tests(directory)
+function gotools.run_tests(directory)
   print("Running go test in directory " .. directory)
   -- Go into the directory and run go test
   local t = io.popen("cd " .. directory .. "; go test")
@@ -26,5 +26,5 @@ function gobuild.run_tests(directory)
   return output
 end
 -- Need this to build a package
-return gobuild
+return gotools
 
