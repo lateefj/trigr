@@ -4,7 +4,7 @@ local gotools = {}
 -- Go extension
 gotools.go_extension = ".go"
 -- Check to see if file is a go source code
-function gotools.is_go_source(file_path)
+function gotools.is_source(file_path)
   -- Get the extension
   local extension = string.sub(file_path, #file_path-2, #file_path)
   -- Check to see if the extension matches

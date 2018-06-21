@@ -17,7 +17,7 @@ local supported_ops = { 'write', 'create', 'remove', 'rename' }
 -- Make sure it is a supported op
 if contains(supported_ops, trig.Data["op"]) then
   -- If the extension is a go file then do custom commands
-  if gotools.is_go_source(file_path) then
+  if gotools.is_source(file_path) then
     -- Run test in directory
     print(gotools.run_tests(basepath))
     -- Run the build command
