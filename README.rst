@@ -10,15 +10,15 @@ Who needs another automation server?
 
 TLDR: What if there was a automation server that was distributed? Moving from central source control from csv / svn to git / mecurial.
 
-Waiting for remote build fails suck! It would be nice to use the extra resources sitting on the average developer machine to automatically compile, test and package applications while sitting in a meeting or at lunch.
+Waiting for remote build fails suck! It would be nice to use the extra resources sitting on the average developer machine to automatically compile, test and package applications while sitting in a meeting or at lunch. Trigr is mainly an event dispatch system. File changes, commits ect. The goal is to be able to run code based on a set of events. The curated DSL and API should make build and deploy scripting easier. If the built in extensions / DSL is used it should work the same on a local development machine as a remote build server.
 
 
-Features 
---------
+Features (TODO)
+---------------
 
-* Decentralized: able to run on a development system (laptop)
-* Automated Configuration: getting software packaged for use is often a Rube Goldberg process that is only made worse by user interfaces
-* Modern Interface: a web ui not for configuration but for monitoring builds
+* Decentralized: able to run on a development system (laptop) or build server
+* Automated Configuration: getting software packaged for use is often a Rube Goldberg process that is only made worse by user interfaces 
+* Modern Interface: a web ui not for configuration but for monitoring builds 
 
 
 Development Process
