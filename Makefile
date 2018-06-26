@@ -3,6 +3,7 @@ TRIGRD_APP := trigd
 TRIGRT_APP := trigr
 VERSION := `cat VERSION`
 
+NATIVE_PLUGINS := example
 # Support binary builds
 PLATFORMS := linux darwin freebsd
 
@@ -36,6 +37,14 @@ build: clean
 			GOARCH=amd64 GOOS=$$plat go build -ldflags "-s -w" -o ../../build/$$plat/$$app ; \
 		done; \
 		cd ../../; \
+	done
+
+.PHONY: native-plugins
+native-plugins: 
+	for p in $(NATIVE_PLUGINS); do \
+		echo $$p; \
+		mkdir -p build/plugins/native; \
+		cd native/example; go build -buildmode=plugin -o ../../build/plugins/native/example.so; \
 	done
 
 .PHONY: test
