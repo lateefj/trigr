@@ -6,19 +6,19 @@ import (
 )
 
 type Connected struct {
-	outbound  map[int32]chan string
+	outbound  map[int32]chan []byte
 	Inbound   chan string
 	Lock      sync.RWMutex
 	currentId int32
 }
 
 func NewConnected() *Connected {
-	return &Connected{make(map[int32]chan string, 0), make(chan string), sync.RWMutex{}, 1}
+	return &Connected{make(map[int32]chan []byte, 0), make(chan string), sync.RWMutex{}, 1}
 }
 
-func (c *Connected) New() (int32, chan string) {
+func (c *Connected) New() (int32, chan []byte) {
 
-	out := make(chan string, 10)
+	out := make(chan []byte, 10)
 
 	c.Lock.Lock()
 	id := atomic.AddInt32(&c.currentId, 1)
@@ -35,7 +35,7 @@ func (c *Connected) Remove(id int32) {
 	c.Lock.Unlock()
 }
 
-func (c *Connected) Send(m string) {
+func (c *Connected) Send(m []byte) {
 	c.Lock.RLock()
 	for _, out := range c.outbound {
 		out <- m

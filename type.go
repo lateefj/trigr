@@ -12,7 +12,8 @@ import (
 )
 
 const (
-	Directory = 1 << iota
+	LogBufferSize = 10
+	Directory     = 1 << iota
 	Git
 	Mercurial
 )
@@ -43,7 +44,8 @@ type Trigger struct {
 }
 
 func NewTrigger(t string, data map[string]interface{}) *Trigger {
-	return &Trigger{Timestamp: milli(), Type: t, Data: data, Context: context.Background()}
+	// Create a new trigger with unbuffered log channel
+	return &Trigger{Timestamp: milli(), Type: t, Data: data, Context: context.Background(), Logs: make(chan *Log, LogBufferSize)}
 }
 
 func (t *Trigger) Marshal() ([]byte, error) {

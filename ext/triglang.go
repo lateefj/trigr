@@ -23,7 +23,8 @@ func NewTrigSL(in io.Reader, out io.Writer, dslPath string) *TrigSL {
 func (ll *TrigSL) buildContext(trig *trigr.Trigger) {
 	ll.BuildEnv()
 	ll.SetGlobalVar("log", func(msg string) {
-		ll.Log.Log(msg)
+		// Logging
+		//ll.Log.Log(msg)
 		trig.Logs <- &trigr.Log{Timestamp: time.Now().Unix(), Text: msg}
 	})
 	ll.SetGlobalVar("trig", luar.New(ll.State, trig))

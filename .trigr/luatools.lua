@@ -28,7 +28,7 @@ end
 
 -- Run test for a directory
 function luatools.run_test(file)
-  print("Running lua test file" .. file)
+  log("Running lua test file" .. file)
   run_test_with_env(file)
   -- Run lua testing into the directory and run go test
   --local t = io.popen("cd " .. directory .. "; go test")

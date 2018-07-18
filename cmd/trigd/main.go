@@ -7,11 +7,9 @@ import (
 	"io"
 	"log"
 	"os"
-	"sync/atomic"
 
 	"github.com/lateefj/trigr"
 	"github.com/lateefj/trigr/ext"
-	"golang.org/x/net/websocket"
 )
 
 type TriggerExec struct {
@@ -21,65 +19,13 @@ type TriggerExec struct {
 }
 
 var (
-	messageCount   int64
+	// Track total number of messages
+	messageCount   int64 = 0
 	TriggerChannel chan *trigr.Trigger
 )
 
 func init() {
 	TriggerChannel = make(chan *trigr.Trigger, 0)
-}
-
-func ReadMessages(ws *websocket.Conn) {
-	clientId, send := ClientsConnected.New()
-	defer ClientsConnected.Remove(clientId)
-	defer ws.Close()
-	for m := range send {
-		println("Sending message from socket", m)
-		websocket.Message.Send(ws, m)
-	}
-}
-func PublishTrigger(ws *websocket.Conn) {
-	clientId, send := ClientsConnected.New()
-	defer ClientsConnected.Remove(clientId)
-	defer ws.Close()
-	go func() {
-		for m := range send {
-			websocket.Message.Send(ws, m)
-		}
-	}()
-	var reply string
-	err := websocket.Message.Receive(ws, &reply)
-	if err != nil {
-		log.Printf("Error: %s receiving reply", err)
-		return
-	}
-	log.Println("Received back from client trigr: " + reply)
-	var t *trigr.Trigger
-	err = json.Unmarshal([]byte(reply), t)
-	if err != nil {
-		log.Printf("Failed: to unmarshal %s", err)
-		return
-	}
-	handleTrigger(t)
-	var tl trigr.Log
-	for {
-		err = websocket.Message.Receive(ws, &reply)
-		if err == io.EOF {
-			break
-		}
-
-		if err != nil {
-			log.Printf("Error %s receiving reply\n", err)
-			break
-		}
-		log.Println("Received back from client: " + reply)
-		atomic.AddInt64(&messageCount, 1)
-		err = json.Unmarshal([]byte(reply), &tl)
-		if err != nil {
-			log.Printf("Failed: to unmarshal log %s", err)
-			continue
-		}
-	}
 }
 
 func handleTrigger(t *trigr.Trigger) {
@@ -97,7 +43,6 @@ func handleTrigger(t *trigr.Trigger) {
 		if err != nil {
 			log.Printf("Failed to run dsl %s\n", err)
 		}
-		//fmt.Printf(out.String())
 	}
 }
 
@@ -108,12 +53,25 @@ func main() {
 		for t := range TriggerChannel {
 
 			go func() {
-				handleTrigger(t)
+				// First send the trigger out clients
 				b, err := json.Marshal(t)
 				if err != nil {
 					log.Printf("Failed to marshal trigger %s\n", err)
+					return
 				}
-				ClientsConnected.Send(string(b))
+				ClientsConnected.Send(b)
+				// Next send logs to clients
+				go func() {
+					for l := range t.Logs {
+						b, err := json.Marshal(l)
+						if err != nil {
+							log.Printf("Failed to trigger log %v error:  %s\n", l, err)
+							continue
+						}
+						ClientsConnected.Send(b)
+					}
+				}()
+				handleTrigger(t)
 			}()
 		}
 	}()
