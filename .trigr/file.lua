@@ -19,22 +19,20 @@ if contains(supported_ops, trig.Data["op"]) then
   -- If the extension is a go file then do custom commands
   if gotools.is_source(file_path) then
     -- Run test in directory
-    print(gotools.run_tests(basepath))
-    -- Run the build command
-    print("Done handling go source")
+    log(gotools.run_tests(basepath))
+    -- TODO: Run the build command
   end
 
   -- If the extension is a lua file then do custom commands
   if luatools.is_test_source(file_path) then
     -- Run test in directory
     luatools.run_test(file_path)
-    -- Run the build command
-    print("Done handling go source")
   end
 end 
-print(string.format("Trig Type: %s", trig.Type))
+--[[print(string.format("Trig Type: %s", trig.Type))
 print("Trig Data key : value")
 for k, v in trig.Data() do
   print(string.format("\t%s : %v", k, v))
 end
+]]--
 

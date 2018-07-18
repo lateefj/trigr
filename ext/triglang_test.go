@@ -2,7 +2,6 @@ package ext
 
 import (
 	"bytes"
-	"fmt"
 	"os"
 	"strings"
 	"testing"
@@ -95,7 +94,6 @@ end
 	}
 	for {
 		l, more := <-tig.Logs
-		fmt.Printf("Checking if there are more logs \n")
 		if !more {
 			t.Fatal("Failed to find successful log")
 		}

@@ -87,7 +87,7 @@ func handleTrigger(t *trigr.Trigger) {
 	out := bytes.NewBufferString("")
 	// TODO: Should make this configurable
 	luaPath := fmt.Sprintf("./.trigr/%s.lua", t.Type)
-	log.Printf("Lua loading file %s\n", luaPath)
+	//log.Printf("Lua loading file %s\n", luaPath)
 	if _, err := os.Stat(luaPath); err == nil {
 		// TODO: Lua dependent files should embedded into the binary
 		l := ext.NewTrigSL(in, out, "./lsl/lua")
@@ -97,7 +97,7 @@ func handleTrigger(t *trigr.Trigger) {
 		if err != nil {
 			log.Printf("Failed to run dsl %s\n", err)
 		}
-		fmt.Printf(out.String())
+		//fmt.Printf(out.String())
 	}
 }
 

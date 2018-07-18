@@ -1,6 +1,0 @@
-print("huh....")
-log("Testing from trig....")
-log(string.format("Type: %s", trig.Type))
-log(string.format("Path: %s", trig.Data["path"]))
-log(string.format("Operation: %s", trig.Data["op"]))
-io.popen()

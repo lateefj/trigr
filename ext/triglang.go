@@ -9,6 +9,7 @@ import (
 	luar "layeh.com/gopher-luar"
 )
 
+// TrigSL ... Simple language wrapper around lsl
 type TrigSL struct {
 	lsl.LuaLoader
 }
