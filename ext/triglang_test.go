@@ -27,18 +27,12 @@ func TestRunCode(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to run code %s", err)
 	}
-	if writeBuff.String() != "code test\n" {
-		t.Fatal("Failed to write code test to out")
-	}
 	l, more := <-tig.Logs
 	if !more {
 		t.Fatal("Channel closed before first log message is on it....")
 	}
 	if l.Text != "code test" {
 		t.Fatalf("Failed to get log expected \n'code test\n'\n and got \n'%s'", l.Text)
-	}
-	if writeBuff.String() != "code test\n" {
-		t.Fatalf("Failed to do any logging expected \n'code test\n'\n and got \n'%s'", writeBuff.String())
 	}
 }
 

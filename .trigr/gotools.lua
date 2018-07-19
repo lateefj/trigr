@@ -16,7 +16,6 @@ end
 
 -- Run test for a directory
 function gotools.run_tests(directory)
-  print("Running go test in directory " .. directory)
   -- Go into the directory and run go test
   local t = io.popen("cd " .. directory .. "; go test")
   -- Store output into a variable

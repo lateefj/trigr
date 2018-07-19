@@ -39,6 +39,7 @@ func handleTrigger(t *trigr.Trigger) {
 		l := ext.NewTrigSL(in, out, "./lsl/lua")
 		// Add the trig event to the context
 		l.SetGlobalVar("trig", t)
+		//t.Logs <- trigr.NewLog(fmt.Sprintf("Running lua file %s", luaPath))
 		err = l.RunFile(luaPath, t, make(chan *trigr.Trigger))
 		if err != nil {
 			log.Printf("Failed to run dsl %s\n", err)
@@ -47,32 +48,30 @@ func handleTrigger(t *trigr.Trigger) {
 }
 
 func main() {
-	messageCount = 0
 	log.Printf("Starting trigd\n")
 	go func() {
 		for t := range TriggerChannel {
 
+			messageCount = messageCount + 1
+			// First send the trigger out clients
+			b, err := json.Marshal(t)
+			if err != nil {
+				log.Printf("Failed to marshal trigger %s\n", err)
+				return
+			}
+			ClientsConnected.Send(b)
+			// Next send logs to clients
 			go func() {
-				// First send the trigger out clients
-				b, err := json.Marshal(t)
-				if err != nil {
-					log.Printf("Failed to marshal trigger %s\n", err)
-					return
-				}
-				ClientsConnected.Send(b)
-				// Next send logs to clients
-				go func() {
-					for l := range t.Logs {
-						b, err := json.Marshal(l)
-						if err != nil {
-							log.Printf("Failed to trigger log %v error:  %s\n", l, err)
-							continue
-						}
-						ClientsConnected.Send(b)
+				for l := range t.Logs {
+					b, err := json.Marshal(l)
+					if err != nil {
+						log.Printf("Failed to trigger log %v error:  %s\n", l, err)
+						continue
 					}
-				}()
-				handleTrigger(t)
+					ClientsConnected.Send(b)
+				}
 			}()
+			handleTrigger(t)
 		}
 	}()
 
@@ -80,4 +79,5 @@ func main() {
 	dw := NewDirectoryWatcher("./", TriggerChannel, true)
 	go dw.Watch()
 	setupHandlers()
+	log.Printf("Handled %d messages\n", messageCount)
 }

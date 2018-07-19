@@ -15,36 +15,23 @@ import (
 	"github.com/lateefj/trigr"
 )
 
-var addr = flag.String("addr", "localhost:8080", "http service address")
+var (
+	addr       = flag.String("addr", "localhost:8080", "http service address")
+	connection *websocket.Conn
+	exit       = false
+)
 
-func main() {
-	flag.Parse()
-	log.SetFlags(0)
-
-	interrupt := make(chan os.Signal, 1)
-	signal.Notify(interrupt, os.Interrupt)
-
-	u := url.URL{Scheme: "ws", Host: *addr, Path: "/ws"}
-	log.Printf("connecting to %s", u.String())
+func consumeMessages(u url.URL) {
 
 	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
 	if err != nil {
-		log.Fatal("dial:", err)
+		log.Printf("Failed to connect with error:", err)
+		// Breath before trying to reconnect
+		time.Sleep(1 * time.Second)
+		return
 	}
+	connection = c
 	defer c.Close()
-
-	done := make(chan struct{})
-
-	defer close(done)
-	// Handle exit signals
-	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs, os.Interrupt)
-	go func() {
-		for sig := range sigs {
-			fmt.Printf("Exiting for sig %s\n", sig.String())
-			c.Close()
-		}
-	}()
 	for {
 		_, message, err := c.ReadMessage()
 		if err != nil {
@@ -76,6 +63,38 @@ func main() {
 			}
 			et := time.Unix(l.Timestamp, 0)
 			fmt.Printf("%s ➜ %s\n", et, l.Text)
+		}
+	}
+}
+
+func main() {
+	flag.Parse()
+	log.SetFlags(0)
+
+	u := url.URL{Scheme: "ws", Host: *addr, Path: "/ws"}
+	log.Printf("connecting to %s", u.String())
+	interrupt := make(chan os.Signal, 1)
+	signal.Notify(interrupt, os.Interrupt)
+
+	done := make(chan struct{})
+
+	defer close(done)
+	// Handle exit signals
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, os.Interrupt)
+	go func() {
+		for sig := range sigs {
+			fmt.Printf("Exiting for sig %s\n", sig.String())
+			connection.Close()
+			exit = true
+		}
+	}()
+
+	for {
+		consumeMessages(u)
+		if exit {
+			os.Exit(0)
+			return
 		}
 	}
 }

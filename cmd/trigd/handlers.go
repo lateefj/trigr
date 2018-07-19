@@ -35,6 +35,7 @@ func ReadMessages(w http.ResponseWriter, r *http.Request) {
 		err = ws.WriteMessage(websocket.BinaryMessage, m)
 		if err != nil {
 			log.Println("Error WriteMessage :", err, m)
+			return
 		}
 	}
 }

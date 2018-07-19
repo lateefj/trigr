@@ -28,17 +28,9 @@ end
 
 -- Run test for a directory
 function luatools.run_test(file)
-  log("Running lua test file" .. file)
-  run_test_with_env(file)
-  -- Run lua testing into the directory and run go test
-  --local t = io.popen("cd " .. directory .. "; go test")
-  -- Store output into a variable
-  --local output = t:read("*a")
-  -- Close the connection
-  --t:close()
-  --return output
+  --log("Running lua test file" .. file)
+  return run_test_with_env(file)
 end
 
 -- Need this to build a package
 return luatools
-
