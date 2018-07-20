@@ -2,7 +2,9 @@ package main
 
 import (
 	"bytes"
+	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 
@@ -13,6 +15,7 @@ import (
 var (
 	// Track total number of messages
 	messageCount int64 = 0
+	confFile           = flag.String("conf", "~/.trigr/config.json", "Path to configuration file")
 )
 
 func handleTrigger(path string, t *trigr.Trigger) {
@@ -35,7 +38,22 @@ func handleTrigger(path string, t *trigr.Trigger) {
 }
 
 func main() {
+	flag.Parse()
 	log.Printf("Starting trigd\n")
+	if _, err := os.Stat(*confFile); err == nil {
+		log.Printf("Config file path %s\n", *confFile)
+		bits, err := ioutil.ReadFile(*confFile)
+		if err != nil {
+			log.Printf("ERROR: Reading file %s error: %s\n", *confFile, err)
+		}
+		pm, err := LoadProjectManager(bits)
+		if err != nil {
+			log.Printf("ERROR: Loading file %s error: %s\n", *confFile, err)
+		}
+		Manager = pm
+	} else {
+		log.Printf("ERROR: Configuration file does not exist: %s\n", *confFile)
+	}
 	/*go func() {
 		for t := range TriggerChannel {
 

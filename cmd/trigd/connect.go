@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"os"
 	"sync"
 	"sync/atomic"
 
@@ -56,7 +57,8 @@ func (c *Connected) Send(m []byte) {
 
 type Project struct {
 	trigr.Project
-	Connected *Connected
+	Connected *Connected `json:"-"`
+	Persitant bool       `json:"persistant"`
 }
 
 func NewProject(id string) *Project {
@@ -105,6 +107,23 @@ func NewProjectManager() *ProjectManager {
 	return &ProjectManager{Projects: make(map[string]*Project), mutex: sync.RWMutex{}}
 }
 
+func LoadProjectManager(bits []byte) (*ProjectManager, error) {
+	var projects map[string]*Project
+	err := json.Unmarshal(bits, &projects)
+	if err != nil {
+		return nil, err
+	}
+	pm := NewProjectManager()
+	for id, p := range projects {
+		p.Persitant = true
+		pm.Projects[id] = p
+		if p.LocalSource != nil {
+			go p.MonitorDirectory(p.LocalSource.Path)
+		}
+	}
+	return pm, nil
+}
+
 func (pm *ProjectManager) Add(p *Project) error {
 	pm.mutex.Lock()
 	defer pm.mutex.Unlock()
@@ -116,6 +135,7 @@ func (pm *ProjectManager) Add(p *Project) error {
 }
 
 func (pm *ProjectManager) Remove(id string) error {
+	// TODO: Need to kill the goroutine that is monitoring the directory
 	pm.mutex.Lock()
 	defer pm.mutex.Unlock()
 	if _, exists := pm.Projects[id]; !exists {
@@ -134,4 +154,27 @@ func (pm *ProjectManager) Get(id string) (*Project, error) {
 	} else {
 		return p, nil
 	}
+}
+func (pm *ProjectManager) Bytes() ([]byte, error) {
+	tmp := make(map[string]*Project)
+	for id, p := range pm.Projects {
+		if p.Persitant {
+			tmp[id] = p
+		}
+	}
+	return json.Marshal(tmp)
+}
+
+func SaveManager() error {
+	f, err := os.Create(*confFile)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	bits, err := Manager.Bytes()
+	if err != nil {
+		return err
+	}
+	f.Write(bits)
+	return nil
 }

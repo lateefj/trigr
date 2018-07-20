@@ -128,15 +128,27 @@ func setupHandlers() {
 			return
 		}
 		p := NewProject(id)
+		persist := r.FormValue("persist")
+		if persist != "" {
+			p.Persitant = true
+		}
 		p.LocalSource = &trigr.LocalSource{Path: path}
 		err := Manager.Add(p)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(fmt.Sprintf("Project with id %s already exists", id)))
-			return
+			//return
 		}
 
 		go p.MonitorDirectory(path)
+		if p.Persitant {
+			err = SaveManager()
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(fmt.Sprintf("Error persisting project %s already exists", id)))
+				return
+			}
+		}
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(fmt.Sprintf("Added project %s with path %s", id, path)))
 

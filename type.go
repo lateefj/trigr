@@ -56,12 +56,12 @@ type Source struct {
 }
 
 type LocalSource struct {
-	Type SourceType
-	Path string
+	Type SourceType `json:"type"`
+	Path string     `json:"path"`
 }
 type RemoteSource struct {
-	Type SourceType
-	Url  string
+	Type SourceType `json:"type"`
+	Url  string     `json:"url"`
 }
 
 // Build
@@ -84,11 +84,11 @@ type Branch struct {
 
 // Project
 type Project struct {
-	Id           string        `json:"id"`            // Project name
-	LocalSource  *LocalSource  `json:"local_source"`  // Local source project configuration
-	RemoteSource *RemoteSource `json:"remote_source"` // Remote source project configuration
-	Triggers     chan *Trigger `json:"_"`
-	Logs         chan *Log     `json:"_"` // Stream of output
+	Id           string        `json:"id"`                      // Project name
+	LocalSource  *LocalSource  `json:"local_source,omitempty"`  // Local source project configuration
+	RemoteSource *RemoteSource `json:"remote_source,omitempty"` // Remote source project configuration
+	Triggers     chan *Trigger `json:"-"`
+	Logs         chan *Log     `json:"-"` // Stream of output
 }
 
 func NewProject(id string) *Project {
