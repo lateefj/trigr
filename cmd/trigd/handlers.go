@@ -7,6 +7,7 @@ import (
 
 	"bitbucket.org/lateefj/httphacks"
 	"github.com/GeertJohan/go.rice"
+	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 )
 
@@ -23,13 +24,22 @@ func init() {
 }
 
 func ReadMessages(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	projectId := vars["project_id"]
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Print("Error converting to websocket:", err)
 		return
 	}
-	clientId, send := ClientsConnected.New()
-	defer ClientsConnected.Remove(clientId)
+	p, err := Manager.Get(projectId)
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte(fmt.Sprintf("Could not find project %s", projectId)))
+		return
+	}
+
+	clientId, send := p.Connected.New()
+	defer p.Connected.Remove(clientId)
 	defer ws.Close()
 	for m := range send {
 		err = ws.WriteMessage(websocket.BinaryMessage, m)
@@ -98,11 +108,10 @@ func setupHandlers() {
 	http.Handle("/", http.FileServer(ui))
 	//http.Handle("/bower_components", http.FileServer(bower))
 	http.HandleFunc("/api/status", httphacks.TimeWrap(func(w http.ResponseWriter, r *http.Request) {
-		ClientsConnected.Send([]byte("Status being checked"))
 		w.Header().Set("Content-Type", "application/json")
 		w.Write([]byte(`{"status":"Happy happy joy joy!"}`))
 	}))
 	//http.HandleFunc("/ws/trigger", PublishTrigger)
-	http.HandleFunc("/ws", ReadMessages)
+	http.HandleFunc("/ws/{project_id}", ReadMessages)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", 8080), nil))
 }

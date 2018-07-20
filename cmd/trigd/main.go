@@ -2,21 +2,13 @@ package main
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
-	"io"
 	"log"
 	"os"
 
 	"github.com/lateefj/trigr"
 	"github.com/lateefj/trigr/ext"
 )
-
-type TriggerExec struct {
-	trigr.Trigger
-	Input  io.ReadCloser
-	Output io.WriteCloser
-}
 
 var (
 	// Track total number of messages
@@ -49,7 +41,7 @@ func handleTrigger(t *trigr.Trigger) {
 
 func main() {
 	log.Printf("Starting trigd\n")
-	go func() {
+	/*go func() {
 		for t := range TriggerChannel {
 
 			messageCount = messageCount + 1
@@ -74,10 +66,10 @@ func main() {
 			handleTrigger(t)
 		}
 	}()
-
+	*/
 	// Default watch current directory
-	dw := NewDirectoryWatcher("./", TriggerChannel, true)
-	go dw.Watch()
+	//dw := NewDirectoryWatcher("./", TriggerChannel, true)
+	//go dw.Watch()
 	setupHandlers()
 	log.Printf("Handled %d messages\n", messageCount)
 }
