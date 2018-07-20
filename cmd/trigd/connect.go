@@ -15,6 +15,7 @@ var (
 	Manager = NewProjectManager()
 )
 
+// Connected client
 type Connected struct {
 	outbound  map[int32]chan []byte
 	Inbound   chan string
@@ -91,7 +92,7 @@ func (p *Project) MonitorDirectory(path string) {
 				p.Connected.Send(b)
 			}
 		}()
-		handleTrigger(t)
+		handleTrigger(p.LocalSource.Path, t)
 	}
 }
 

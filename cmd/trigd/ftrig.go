@@ -26,6 +26,7 @@ func isSCMPath(path string) bool {
 	return false
 }
 
+// Way to monitor file system events
 type DirectoryWatcher struct {
 	Path           string
 	TriggerChannel chan *trigr.Trigger
@@ -64,7 +65,7 @@ func (dw *DirectoryWatcher) Watch() error {
 		select {
 		case ev := <-watcher.Events:
 			d := map[string]interface{}{
-				"path": fmt.Sprintf("%s%s", dw.Path, ev.Name),
+				"path": fmt.Sprintf("%s", ev.Name),
 			}
 			if ev.Op == fsnotify.Write {
 				d["op"] = "write"

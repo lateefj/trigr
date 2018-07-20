@@ -13,7 +13,7 @@ local filename = string.gsub(file_path, "(.*/)(.*)", "%2")
 local basepath = string.sub(file_path, 0, #file_path - #filename)
 -- List of supported file operations
 local supported_ops = { 'write', 'create', 'remove', 'rename' }
-
+--log("Path is " .. file_path)
 -- Make sure it is a supported op
 if contains(supported_ops, trig.Data["op"]) then
   -- If the extension is a go file then do custom commands

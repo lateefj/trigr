@@ -12,20 +12,15 @@ import (
 
 var (
 	// Track total number of messages
-	messageCount   int64 = 0
-	TriggerChannel chan *trigr.Trigger
+	messageCount int64 = 0
 )
 
-func init() {
-	TriggerChannel = make(chan *trigr.Trigger, 0)
-}
-
-func handleTrigger(t *trigr.Trigger) {
+func handleTrigger(path string, t *trigr.Trigger) {
 	in := bytes.NewBufferString("")
 	out := bytes.NewBufferString("")
 	// TODO: Should make this configurable
-	luaPath := fmt.Sprintf("./.trigr/%s.lua", t.Type)
-	//log.Printf("Lua loading file %s\n", luaPath)
+	luaPath := fmt.Sprintf("%s/.trigr/%s.lua", path, t.Type)
+	log.Printf("Lua loading file %s\n", luaPath)
 	if _, err := os.Stat(luaPath); err == nil {
 		// TODO: Lua dependent files should embedded into the binary
 		l := ext.NewTrigSL(in, out, "./lsl/lua")
