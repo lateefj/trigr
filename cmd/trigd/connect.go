@@ -65,6 +65,12 @@ func NewProject(id string) *Project {
 	return &Project{Project: trigr.Project{Id: id, Triggers: make(chan *trigr.Trigger), Logs: make(chan *trigr.Log)}, Connected: NewConnected()}
 }
 
+func (p *Project) Init() {
+	p.Connected = NewConnected()
+	p.Project.Triggers = make(chan *trigr.Trigger)
+	p.Project.Logs = make(chan *trigr.Log)
+}
+
 func (p *Project) Send(m []byte) {
 	p.Connected.Send(m)
 }
@@ -115,7 +121,9 @@ func LoadProjectManager(bits []byte) (*ProjectManager, error) {
 	}
 	pm := NewProjectManager()
 	for id, p := range projects {
+		p.Init()
 		p.Persitant = true
+
 		pm.Projects[id] = p
 		if p.LocalSource != nil {
 			go p.MonitorDirectory(p.LocalSource.Path)
