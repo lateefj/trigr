@@ -19,7 +19,7 @@ if contains(supported_ops, trig.Data["op"]) then
   -- If the extension is a go file then do custom commands
   if gotools.is_source(file_path) then
     -- Run test in directory
-    log(gotools.run_tests(basepath))
+    log(gotools.run_tests(exec, basepath))
     -- TODO: Run the build command
   end
 

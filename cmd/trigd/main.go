@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"os/exec"
 
 	"github.com/lateefj/trigr"
 	"github.com/lateefj/trigr/ext"
@@ -18,21 +19,47 @@ var (
 	confFile           = flag.String("conf", "~/.trigr/config.json", "Path to configuration file")
 )
 
+func setOutput() string {
+
+	cmd := exec.Command("bash", "-c", "set")
+	cmd.Env = os.Environ()
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Sprintf("FAILED WITH ERROR: %s\n", err)
+	}
+	return string(output)
+}
+
 func handleTrigger(path string, t *trigr.Trigger) {
 	in := bytes.NewBufferString("")
 	out := bytes.NewBufferString("")
 	// TODO: Should make this configurable
 	luaPath := fmt.Sprintf("%s/.trigr/%s.lua", path, t.Type)
-	log.Printf("Lua loading file %s\n", luaPath)
+	//log.Printf("Lua loading file %s\n", luaPath)
 	if _, err := os.Stat(luaPath); err == nil {
 		// TODO: Lua dependent files should embedded into the binary
 		l := ext.NewTrigSL(in, out, "./lsl/lua")
+		l.SetGlobalVar("exec", func(cmd string) string {
+			t.Logs <- trigr.NewLog(setOutput())
+			p := exec.Command(cmd)
+			p.Dir = path
+			p.Env = os.Environ()
+			t.Logs <- trigr.NewLog(fmt.Sprintf("Env is \n%s\n", p.Env))
+			t.Logs <- trigr.NewLog(fmt.Sprintf("running: %s ", cmd))
+			output, err := p.CombinedOutput()
+			if err != nil {
+				t.Logs <- trigr.NewLog(err.Error())
+			}
+			return string(output)
+		})
 		// Add the trig event to the context
 		l.SetGlobalVar("trig", t)
 		//t.Logs <- trigr.NewLog(fmt.Sprintf("Running lua file %s", luaPath))
 		err = l.RunFile(luaPath, t, make(chan *trigr.Trigger))
 		if err != nil {
-			log.Printf("Failed to run dsl %s\n", err)
+			msgErr := fmt.Sprintf("Failed to run dsl %s\n", err)
+			t.Logs <- trigr.NewLog(msgErr)
+			log.Print(msgErr)
 		}
 	}
 }
@@ -54,32 +81,6 @@ func main() {
 	} else {
 		log.Printf("ERROR: Configuration file does not exist: %s\n", *confFile)
 	}
-	/*go func() {
-		for t := range TriggerChannel {
-
-			messageCount = messageCount + 1
-			// First send the trigger out clients
-			b, err := json.Marshal(t)
-			if err != nil {
-				log.Printf("Failed to marshal trigger %s\n", err)
-				return
-			}
-			ClientsConnected.Send(b)
-			// Next send logs to clients
-			go func() {
-				for l := range t.Logs {
-					b, err := json.Marshal(l)
-					if err != nil {
-						log.Printf("Failed to trigger log %v error:  %s\n", l, err)
-						continue
-					}
-					ClientsConnected.Send(b)
-				}
-			}()
-			handleTrigger(t)
-		}
-	}()
-	*/
 	// Default watch current directory
 	//dw := NewDirectoryWatcher("./", TriggerChannel, true)
 	//go dw.Watch()
