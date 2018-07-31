@@ -57,6 +57,7 @@ func (c *Connected) Send(m []byte) {
 
 type Project struct {
 	trigr.Project
+	Env       []string   `json:"env"`
 	Connected *Connected `json:"-"`
 	Persitant bool       `json:"persistant"`
 }
@@ -100,27 +101,36 @@ func (p *Project) MonitorDirectory(path string) {
 				p.Connected.Send(b)
 			}
 		}()
-		handleTrigger(p.LocalSource.Path, t)
+		env := p.Env
+		for _, e := range Manager.GlobalEnv {
+			env = setAppend(env, e)
+		}
+		handleTrigger(env, p, t)
 	}
 }
 
 type ProjectManager struct {
-	Projects map[string]*Project
-	mutex    sync.RWMutex
+	GlobalEnv []string            `json:"global_env"`
+	Projects  map[string]*Project `json:"projects"`
+	mutex     sync.RWMutex        `json:"-"`
 }
 
 func NewProjectManager() *ProjectManager {
-	return &ProjectManager{Projects: make(map[string]*Project), mutex: sync.RWMutex{}}
+	return &ProjectManager{Projects: make(map[string]*Project), mutex: sync.RWMutex{}, GlobalEnv: make([]string, 0)}
 }
 
 func LoadProjectManager(bits []byte) (*ProjectManager, error) {
-	var projects map[string]*Project
-	err := json.Unmarshal(bits, &projects)
+	// Read in from configuration file
+	var manager ProjectManager
+	err := json.Unmarshal(bits, &manager)
 	if err != nil {
 		return nil, err
 	}
 	pm := NewProjectManager()
-	for id, p := range projects {
+	// Set configuration
+	pm.Projects = manager.Projects
+	pm.GlobalEnv = manager.GlobalEnv
+	for id, p := range pm.Projects {
 		p.Init()
 		p.Persitant = true
 
@@ -164,13 +174,7 @@ func (pm *ProjectManager) Get(id string) (*Project, error) {
 	}
 }
 func (pm *ProjectManager) Bytes() ([]byte, error) {
-	tmp := make(map[string]*Project)
-	for id, p := range pm.Projects {
-		if p.Persitant {
-			tmp[id] = p
-		}
-	}
-	return json.Marshal(tmp)
+	return json.Marshal(pm)
 }
 
 func SaveManager() error {

@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"strings"
 
 	"github.com/lateefj/trigr"
 	"github.com/lateefj/trigr/ext"
@@ -30,38 +31,61 @@ func setOutput() string {
 	return string(output)
 }
 
-func handleTrigger(path string, t *trigr.Trigger) {
+func handleTrigger(env []string, p *Project, t *trigr.Trigger) {
 	in := bytes.NewBufferString("")
 	out := bytes.NewBufferString("")
-	// TODO: Should make this configurable
-	luaPath := fmt.Sprintf("%s/.trigr/%s.lua", path, t.Type)
-	//log.Printf("Lua loading file %s\n", luaPath)
-	if _, err := os.Stat(luaPath); err == nil {
-		// TODO: Lua dependent files should embedded into the binary
-		l := ext.NewTrigSL(in, out, "./lsl/lua")
-		l.SetGlobalVar("exec", func(cmd string) string {
-			t.Logs <- trigr.NewLog(setOutput())
-			p := exec.Command(cmd)
-			p.Dir = path
-			p.Env = os.Environ()
-			t.Logs <- trigr.NewLog(fmt.Sprintf("Env is \n%s\n", p.Env))
-			t.Logs <- trigr.NewLog(fmt.Sprintf("running: %s ", cmd))
-			output, err := p.CombinedOutput()
+	if p.LocalSource != nil {
+		path := p.LocalSource.Path
+		luaPath := fmt.Sprintf("%s/.trigr/%s.lua", path, t.Type)
+		//log.Printf("Lua loading file %s\n", luaPath)
+		if _, err := os.Stat(luaPath); err == nil {
+			// TODO: Lua dependent files should embedded into the binary
+			l := ext.NewTrigSL(in, out, "./lsl/lua")
+			l.SetGlobalVar("exec", func(cmd, directory string) string {
+				split := strings.Split(cmd, " ")
+				c := split[0]
+				args := make([]string, 0)
+				if len(split) > 1 {
+					args = split[1:]
+				}
+				//t.Logs <- trigr.NewLog(setOutput())
+				p := exec.Command(c, args...)
+				p.Dir = directory
+				p.Env = env
+				//t.Logs <- trigr.NewLog(fmt.Sprintf("Env is \n%s\n", p.Env))
+				t.Logs <- trigr.NewLog(fmt.Sprintf("running: %s ", cmd))
+				output, err := p.CombinedOutput()
+				if err != nil {
+					t.Logs <- trigr.NewLog(err.Error())
+				}
+				return string(output)
+			})
+			// Add the trig event to the context
+			l.SetGlobalVar("trig", t)
+			//t.Logs <- trigr.NewLog(fmt.Sprintf("Running lua file %s", luaPath))
+			err = l.RunFile(luaPath, t, make(chan *trigr.Trigger))
 			if err != nil {
-				t.Logs <- trigr.NewLog(err.Error())
+				msgErr := fmt.Sprintf("Failed to run dsl %s\n", err)
+				t.Logs <- trigr.NewLog(msgErr)
+				log.Print(msgErr)
 			}
-			return string(output)
-		})
-		// Add the trig event to the context
-		l.SetGlobalVar("trig", t)
-		//t.Logs <- trigr.NewLog(fmt.Sprintf("Running lua file %s", luaPath))
-		err = l.RunFile(luaPath, t, make(chan *trigr.Trigger))
-		if err != nil {
-			msgErr := fmt.Sprintf("Failed to run dsl %s\n", err)
-			t.Logs <- trigr.NewLog(msgErr)
-			log.Print(msgErr)
 		}
 	}
+}
+func contains(s []string, e string) bool {
+	for _, a := range s {
+		if a == e {
+			return true
+		}
+	}
+	return false
+}
+
+func setAppend(items []string, e string) []string {
+	if !contains(items, e) {
+		items = append(items, e)
+	}
+	return items
 }
 
 func main() {
@@ -78,6 +102,10 @@ func main() {
 			log.Printf("ERROR: Loading file %s error: %s\n", *confFile, err)
 		}
 		Manager = pm
+		// Append the current env to the global saved one
+		for _, e := range os.Environ() {
+			Manager.GlobalEnv = setAppend(Manager.GlobalEnv, e)
+		}
 	} else {
 		log.Printf("ERROR: Configuration file does not exist: %s\n", *confFile)
 	}

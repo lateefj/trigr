@@ -1,3 +1,4 @@
+
 -- Create gotools package
 local gotools = {}
 
@@ -15,9 +16,9 @@ function gotools.is_source(file_path)
 end
 
 -- Run test for a directory
-function gotools.run_tests(directory)
+function gotools.run_tests(exec, directory)
   -- Go into the directory and run go test
-  return exec("cd " .. directory .. "; go test")
+  return exec("go test", directory)
 end
 -- Need this to build a package
 return gotools
