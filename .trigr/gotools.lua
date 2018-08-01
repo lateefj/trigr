@@ -1,3 +1,4 @@
+
 -- Create gotools package
 local gotools = {}
 
@@ -15,14 +16,9 @@ function gotools.is_source(file_path)
 end
 
 -- Run test for a directory
-function gotools.run_tests(directory)
+function gotools.run_tests(exec, directory)
   -- Go into the directory and run go test
-  local t = io.popen("cd " .. directory .. "; go test")
-  -- Store output into a variable
-  local output = t:read("*a")
-  -- Close the connection
-  t:close()
-  return output
+  return exec("go test", directory)
 end
 -- Need this to build a package
 return gotools

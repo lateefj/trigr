@@ -17,6 +17,8 @@ import (
 
 var (
 	addr       = flag.String("addr", "localhost:8080", "http service address")
+	logLog     = flag.Bool("log", true, "Log stream output")
+	trigLog    = flag.Bool("tlog", false, "Log all trigger messages")
 	connection *websocket.Conn
 	exit       = false
 )
@@ -25,7 +27,7 @@ func consumeMessages(u url.URL) {
 
 	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
 	if err != nil {
-		log.Printf("Failed to connect with error:", err)
+		log.Printf("Failed to connect with error: %s\n", err)
 		// Breath before trying to reconnect
 		time.Sleep(1 * time.Second)
 		return
@@ -53,7 +55,9 @@ func consumeMessages(u url.URL) {
 				log.Printf("Failed to unmarshal data %s\n", err)
 				continue
 			}
-			fmt.Printf("%s ➜ Trigger event type %s with data %s\n", et, t.Type, ds)
+			if *trigLog {
+				fmt.Printf("%s ➜ Trigger event type %s with data %s\n", et, t.Type, ds)
+			}
 		} else {
 			var l trigr.Log
 			err = json.Unmarshal(message, &l)
@@ -61,17 +65,28 @@ func consumeMessages(u url.URL) {
 				log.Printf("Failed to unmarshal %s\n", err)
 				continue
 			}
-			et := time.Unix(l.Timestamp, 0)
-			fmt.Printf("%s ➜ %s\n", et, l.Text)
+			if *logLog {
+				et := time.Unix(l.Timestamp, 0)
+				fmt.Printf("%s ➜ %s\n", et, l.Text)
+			}
 		}
 	}
 }
 
+func usage() {
+	fmt.Println("Usage: trigr project_id")
+}
 func main() {
 	flag.Parse()
 	log.SetFlags(0)
 
-	u := url.URL{Scheme: "ws", Host: *addr, Path: "/ws"}
+	project := flag.Arg(0)
+	if project == "" {
+		usage()
+		log.Fatal("Project id is required parameter")
+	}
+
+	u := url.URL{Scheme: "ws", Host: *addr, Path: fmt.Sprintf("/ws/%s", project)}
 	log.Printf("connecting to %s", u.String())
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)

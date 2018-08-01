@@ -20,6 +20,7 @@ func NewTrigSL(in io.Reader, out io.Writer, dslPath string) *TrigSL {
 	return &TrigSL{*ll}
 }
 
+// Context builder
 func (ll *TrigSL) buildContext(trig *trigr.Trigger) {
 	ll.BuildEnv()
 	ll.SetGlobalVar("log", func(msg string) {

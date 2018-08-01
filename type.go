@@ -5,15 +5,15 @@ package trigr
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
-	"log"
-	"os"
 	"time"
 )
 
+type SourceType int
+
 const (
 	LogBufferSize = 10
-	Directory     = 1 << iota
+
+	Directory SourceType = 1 << iota
 	Git
 	Mercurial
 )
@@ -53,39 +53,15 @@ func (t *Trigger) Marshal() ([]byte, error) {
 }
 
 type Source struct {
-	Type int
-	Path string
-	Url  *string
 }
 
-func NewSource(t int, path string, url *string) *Source {
-	return &Source{Type: t, Path: path, Url: url}
+type LocalSource struct {
+	Type SourceType `json:"type"`
+	Path string     `json:"path"`
 }
-
-// Process represents a step in the entire pipeline
-type Process struct {
-	Name string
-}
-
-// Pipeline represents the entire development process
-type Pipeline struct {
-	Configuration map[string]Process
-	Prepare       map[string]Process
-	Build         map[string]Process
-	Package       map[string]Process
-	Deploy        map[string]Process
-	Running       []Process
-}
-
-func NewPipeline() *Pipeline {
-	return &Pipeline{
-		Configuration: make(map[string]Process),
-		Prepare:       make(map[string]Process),
-		Build:         make(map[string]Process),
-		Package:       make(map[string]Process),
-		Deploy:        make(map[string]Process),
-		Running:       make([]Process, 0),
-	}
+type RemoteSource struct {
+	Type SourceType `json:"type"`
+	Url  string     `json:"url"`
 }
 
 // Build
@@ -108,30 +84,20 @@ type Branch struct {
 
 // Project
 type Project struct {
-	Name     string    `json:"name"`   // Project name
-	Source   *Source   `json:"source"` // Handles dealing with source code ect
-	Path     string    `json:"path"`   // Directory path
-	Output   chan *Log // Stream of output
-	Pipeline Pipeline  // Pipeline models the entire process for building the project
+	Id           string        `json:"id"`                      // Project name
+	LocalSource  *LocalSource  `json:"local_source,omitempty"`  // Local source project configuration
+	RemoteSource *RemoteSource `json:"remote_source,omitempty"` // Remote source project configuration
+	Triggers     chan *Trigger `json:"-"`
+	Logs         chan *Log     `json:"-"` // Stream of output
 }
 
-func LoadProject(path string) (Project, error) {
-	var p Project
-	f, err := os.Open(path)
-	if err != nil {
-		log.Printf("Failed to open file %s with error %s", path, err)
-		return p, err
-	}
-	bits, err := ioutil.ReadAll(f)
-	if err != nil {
-		log.Printf("Failed to read json bytes %s", err)
-		return p, err
-	}
-	err = json.Unmarshal(bits, &p)
-	return p, err
+func NewProject(id string) *Project {
+	return &Project{Id: id, Triggers: make(chan *Trigger), Logs: make(chan *Log)}
 }
 
-// Get a paginated list of the history of triggers for the project
-func History(offset, size int) []Trigger {
-	return make([]Trigger, 0)
+func (p *Project) AssignLocalSource(t SourceType, path string) {
+	p.LocalSource = &LocalSource{Type: t, Path: path}
+}
+func (p *Project) AssignRemoteSource(t SourceType, url string) {
+	p.RemoteSource = &RemoteSource{Type: t, Url: url}
 }
