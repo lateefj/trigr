@@ -109,7 +109,6 @@ func (dw *DirectoryWatcher) Watch() error {
 			if dw.limiter.add(ev.Name) {
 				dw.TriggerChannel <- t
 			}
-			//log.Printf("Write event: %v\n", ev)
 		case err := <-watcher.Errors:
 			log.Printf("ERROR: %s\n", err)
 		}
