@@ -17,8 +17,16 @@ import (
 var (
 	// Track total number of messages
 	messageCount int64 = 0
-	confFile           = flag.String("conf", "~/.trigr/config.json", "Path to configuration file")
+	confFile           = flag.String("conf", "", "Path to configuration file")
 )
+
+func init() {
+	home := os.Getenv("HOME")
+	if *confFile == "" && home != "" {
+		defaultFile := fmt.Sprintf("%s/.trigr/config.json", home)
+		confFile = &defaultFile
+	}
+}
 
 func setOutput() string {
 

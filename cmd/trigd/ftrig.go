@@ -6,15 +6,40 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/lateefj/trigr"
+)
+
+const (
+	changeDelay = 10
 )
 
 var (
 	// Ignore directories
 	scmDirs = []string{".git", ".hg", ".cvs", ".svn"}
 )
+
+// duplicateLimiter ... rate limit the number of changes for a single file
+type duplicateLimiter struct {
+	files sync.Map
+}
+
+func newDuplicatLimiter() *duplicateLimiter {
+	return &duplicateLimiter{files: sync.Map{}}
+}
+
+func (dl *duplicateLimiter) add(name string) bool {
+	_, exists := dl.files.Load(name)
+	if !exists {
+		dl.files.Store(name, nil)
+		time.Sleep(changeDelay * time.Millisecond)
+		return true
+	}
+	return false
+}
 
 // Helper to match any source control paths
 func isSCMPath(path string) bool {
@@ -31,10 +56,11 @@ type DirectoryWatcher struct {
 	Path           string
 	TriggerChannel chan *trigr.Trigger
 	ExcludeSCM     bool
+	limiter        *duplicateLimiter
 }
 
 func NewDirectoryWatcher(path string, trigChan chan *trigr.Trigger, excludeSCM bool) *DirectoryWatcher {
-	return &DirectoryWatcher{Path: path, TriggerChannel: trigChan, ExcludeSCM: excludeSCM}
+	return &DirectoryWatcher{Path: path, TriggerChannel: trigChan, ExcludeSCM: excludeSCM, limiter: newDuplicatLimiter()}
 }
 
 func (dw *DirectoryWatcher) Watch() error {
@@ -78,8 +104,11 @@ func (dw *DirectoryWatcher) Watch() error {
 			} else if ev.Op == fsnotify.Rename {
 				d["op"] = "rename"
 			}
+
 			t := trigr.NewTrigger("file", d)
-			dw.TriggerChannel <- t
+			if dw.limiter.add(ev.Name) {
+				dw.TriggerChannel <- t
+			}
 			//log.Printf("Write event: %v\n", ev)
 		case err := <-watcher.Errors:
 			log.Printf("ERROR: %s\n", err)
