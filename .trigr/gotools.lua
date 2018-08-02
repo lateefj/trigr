@@ -18,7 +18,7 @@ end
 -- Run test for a directory
 function gotools.run_tests(exec, directory)
   -- Go into the directory and run go test
-  return exec("go test", directory)
+  return exec("go test -cover", directory)
 end
 -- Need this to build a package
 return gotools

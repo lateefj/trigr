@@ -14,11 +14,12 @@ import (
 )
 
 const (
-	changeDelay = 10
+	// Rate limit delay timer
+	changeDelay = 100
 )
 
 var (
-	// Ignore directories
+	// Ignore directories that are source code
 	scmDirs = []string{".git", ".hg", ".cvs", ".svn"}
 )
 
@@ -34,6 +35,7 @@ func newDuplicatLimiter() *duplicateLimiter {
 func (dl *duplicateLimiter) add(name string) bool {
 	_, exists := dl.files.Load(name)
 	if !exists {
+		defer dl.files.Delete(name)
 		dl.files.Store(name, nil)
 		time.Sleep(changeDelay * time.Millisecond)
 		return true
@@ -113,5 +115,4 @@ func (dw *DirectoryWatcher) Watch() error {
 			log.Printf("ERROR: %s\n", err)
 		}
 	}
-	return nil
 }

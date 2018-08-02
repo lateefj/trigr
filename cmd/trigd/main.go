@@ -45,9 +45,7 @@ func handleTrigger(env []string, p *Project, t *trigr.Trigger) {
 	if p.LocalSource != nil {
 		path := p.LocalSource.Path
 		luaPath := fmt.Sprintf("%s/.trigr/%s.lua", path, t.Type)
-		//log.Printf("Lua loading file %s\n", luaPath)
 		if _, err := os.Stat(luaPath); err == nil {
-			// TODO: Lua dependent files should embedded into the binary
 			l := ext.NewTrigSL(in, out, "./lsl/lua")
 			l.SetGlobalVar("exec", func(cmd, directory string) string {
 				split := strings.Split(cmd, " ")
@@ -56,11 +54,9 @@ func handleTrigger(env []string, p *Project, t *trigr.Trigger) {
 				if len(split) > 1 {
 					args = split[1:]
 				}
-				//t.Logs <- trigr.NewLog(setOutput())
 				p := exec.Command(c, args...)
 				p.Dir = directory
 				p.Env = env
-				//t.Logs <- trigr.NewLog(fmt.Sprintf("Env is \n%s\n", p.Env))
 				t.Logs <- trigr.NewLog(fmt.Sprintf("running: %s ", cmd))
 				output, err := p.CombinedOutput()
 				if err != nil {
@@ -70,7 +66,6 @@ func handleTrigger(env []string, p *Project, t *trigr.Trigger) {
 			})
 			// Add the trig event to the context
 			l.SetGlobalVar("trig", t)
-			//t.Logs <- trigr.NewLog(fmt.Sprintf("Running lua file %s", luaPath))
 			err = l.RunFile(luaPath, t, make(chan *trigr.Trigger))
 			if err != nil {
 				msgErr := fmt.Sprintf("Failed to run dsl %s\n", err)
