@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	// Rate limit delay timer
+	// Rate limit delay timer. This is not ideal it probably depends on disk speeds and other things TODO: add configuration option
 	changeDelay = 100
 )
 
@@ -33,10 +33,14 @@ func newDuplicatLimiter() *duplicateLimiter {
 }
 
 func (dl *duplicateLimiter) add(name string) bool {
+	// Check to see if it exists
 	_, exists := dl.files.Load(name)
 	if !exists {
-		defer dl.files.Delete(name)
+		// Doesn't exist then add it
 		dl.files.Store(name, nil)
+		// Make sure it gets deleted
+		defer dl.files.Delete(name)
+		// Sleep for and wait for change
 		time.Sleep(changeDelay * time.Millisecond)
 		return true
 	}
