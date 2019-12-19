@@ -10,22 +10,12 @@ all: build
 
 .PHONY: clean
 clean:
-	rm -fr build 
+	rm -rf build 
 	echo $(PLATFORMS)
 	@- $(foreach PLAT,$(PLATFORMS), \
-		mkdir -p build/$(PLAT) \
+		mkdir -p build/$(PLAT); \
 		)
 
-deps:
-	# Someday switch to vgo once it works with the code
-	# go get -u golang.org/x/vgo
-
-	# vgo build
-
-	go get -u github.com/golang/dep/cmd/dep
-
-vendor: deps
-	dep ensure
 
 .PHONY: build
 build: clean 
