@@ -26,9 +26,9 @@ To save the project in the configuration file add a persist flag to the end of t
 
 To watch the output of the automation use the trigr command line tool.
 
-:: 
+::
   ./build/darwin/trigr trigr -tlog
-
+  
   connecting to ws://localhost:8080/ws/trigr
   51935-10-13 23:07:02 -0800 PST ➜ running: go test -cover
   2019-12-19 07:03:20 -0800 PST ➜ PASS
