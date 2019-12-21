@@ -13,11 +13,6 @@ import (
 	"github.com/lateefj/trigr"
 )
 
-const (
-	// Rate limit delay timer. This is not ideal it probably depends on disk speeds and other things TODO: add configuration option
-	changeDelay = 100
-)
-
 var (
 	// Ignore directories that are source code
 	scmDirs = []string{".git", ".hg", ".cvs", ".svn"}
@@ -25,23 +20,23 @@ var (
 
 // duplicateLimiter ... rate limit the number of changes for a single file
 type duplicateLimiter struct {
-	files sync.Map
+	files       sync.Map
+	changeDelay time.Duration
 }
 
-func newDuplicatLimiter() *duplicateLimiter {
-	return &duplicateLimiter{files: sync.Map{}}
-}
-
+// Add file if not duplicate
 func (dl *duplicateLimiter) add(name string) bool {
 	// Check to see if it exists
-	_, exists := dl.files.Load(name)
+	expire, exists := dl.files.Load(name)
+
+	// If has a key but it has expired
+	if exists && expire.(time.Time).Before(time.Now()) {
+		exists = false
+		dl.files.Delete(name)
+	}
 	if !exists {
 		// Doesn't exist then add it
-		dl.files.Store(name, nil)
-		// Make sure it gets deleted
-		defer dl.files.Delete(name)
-		// Sleep for and wait for change
-		time.Sleep(changeDelay * time.Millisecond)
+		dl.files.Store(name, time.Now().Add(dl.changeDelay))
 		return true
 	}
 	return false
@@ -63,16 +58,18 @@ type DirectoryWatcher struct {
 	TriggerChannel chan *trigr.Trigger
 	ExcludeSCM     bool
 	limiter        *duplicateLimiter
+	stopChannel    chan bool
 }
 
+// NewDirectoryWatcher ... Watches a directory publish file change events
 func NewDirectoryWatcher(path string, trigChan chan *trigr.Trigger, excludeSCM bool) *DirectoryWatcher {
-	return &DirectoryWatcher{Path: path, TriggerChannel: trigChan, ExcludeSCM: excludeSCM, limiter: newDuplicatLimiter()}
+	return &DirectoryWatcher{Path: path, TriggerChannel: trigChan, ExcludeSCM: excludeSCM, limiter: &duplicateLimiter{changeDelay: 1000 * time.Millisecond}}
 }
 
 func (dw *DirectoryWatcher) Watch() error {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
-		log.Printf("ERROR: from notify file %s\n", err)
+		log.Printf("ERROR: notify file %s\n", err)
 		return err
 	}
 	filepath.Walk(dw.Path, func(newPath string, info os.FileInfo, err error) error {
@@ -117,6 +114,13 @@ func (dw *DirectoryWatcher) Watch() error {
 			}
 		case err := <-watcher.Errors:
 			log.Printf("ERROR: %s\n", err)
+		case <-dw.stopChannel:
+			log.Printf("Stopping to watch %s\n", dw.Path)
+			return nil
 		}
 	}
+}
+
+func (dw *DirectoryWatcher) Stop() {
+	dw.stopChannel <- true
 }

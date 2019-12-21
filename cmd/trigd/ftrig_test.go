@@ -6,7 +6,7 @@ import (
 )
 
 func TestDuplicateLimiter(t *testing.T) {
-	dl := newDuplicatLimiter()
+	dl := duplicateLimiter{changeDelay: 10 * time.Millisecond}
 	key := "foo"
 	go func() {
 		if !dl.add(key) {
@@ -20,8 +20,27 @@ func TestDuplicateLimiter(t *testing.T) {
 		t.Fatal("Second key add should fail")
 	}
 
-	time.Sleep(2 * changeDelay * time.Millisecond)
+	time.Sleep(7 * time.Millisecond)
 	if !dl.add(key) {
 		t.Fatal("After sleep should be able to add but failed to add")
 	}
 }
+
+/*
+func TestDirectoryWatcher(t *testing.T) {
+	testingPath := "/tmp/trigr_directory_watcher"
+	os.MkdirAll(testingPath, 755)
+	defer func() {
+		os.RemoveAll(testingPath)
+	}()
+
+	triggers := make(chan *trigr.Trigger, 0)
+	dw := NewDirectoryWatcher(testingPath, triggers, false)
+	defer dw.Stop()
+	go func() {
+		err := dw.Watch()
+		if err != nil {
+			log.Printf("Failed to watch directory %s with error: %s", testingPath, err)
+		}
+	}()
+}*/
