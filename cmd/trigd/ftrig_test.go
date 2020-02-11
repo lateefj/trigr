@@ -1,8 +1,13 @@
 package main
 
 import (
+	"fmt"
+	"log"
+	"os"
 	"testing"
 	"time"
+
+	"github.com/lateefj/trigr"
 )
 
 func TestDuplicateLimiter(t *testing.T) {
@@ -26,7 +31,7 @@ func TestDuplicateLimiter(t *testing.T) {
 	}
 }
 
-/*
+// TestDirectoryWatcher ... make sure directory watching is working
 func TestDirectoryWatcher(t *testing.T) {
 	testingPath := "/tmp/trigr_directory_watcher"
 	os.MkdirAll(testingPath, 755)
@@ -36,11 +41,32 @@ func TestDirectoryWatcher(t *testing.T) {
 
 	triggers := make(chan *trigr.Trigger, 0)
 	dw := NewDirectoryWatcher(testingPath, triggers, false)
-	defer dw.Stop()
+
 	go func() {
 		err := dw.Watch()
 		if err != nil {
 			log.Printf("Failed to watch directory %s with error: %s", testingPath, err)
+			t.Fatalf("Error calling Watch %s", err)
 		}
 	}()
-}*/
+
+	f, err := os.Create(fmt.Sprintf("%s/test.dat", testingPath))
+	defer f.Close()
+	if err != nil {
+		t.Fatalf("Failed to create test file %s", err)
+	}
+	f.Write([]byte("Testing one two three"))
+	stopped := make(chan bool, 0)
+	go func() {
+		dw.Stop()
+		stopped <- true
+	}()
+
+	select {
+	case <-stopped:
+		// All good here
+	case <-time.After(10 * time.Millisecond):
+		t.Fatal("Failed to stop the directory watcher")
+	}
+
+}

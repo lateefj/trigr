@@ -63,7 +63,7 @@ type DirectoryWatcher struct {
 
 // NewDirectoryWatcher ... Watches a directory publish file change events
 func NewDirectoryWatcher(path string, trigChan chan *trigr.Trigger, excludeSCM bool) *DirectoryWatcher {
-	return &DirectoryWatcher{Path: path, TriggerChannel: trigChan, ExcludeSCM: excludeSCM, limiter: &duplicateLimiter{changeDelay: 1000 * time.Millisecond}}
+	return &DirectoryWatcher{Path: path, TriggerChannel: trigChan, ExcludeSCM: excludeSCM, limiter: &duplicateLimiter{changeDelay: 1000 * time.Millisecond}, stopChannel: make(chan bool, 0)}
 }
 
 func (dw *DirectoryWatcher) Watch() error {
@@ -72,6 +72,7 @@ func (dw *DirectoryWatcher) Watch() error {
 		log.Printf("ERROR: notify file %s\n", err)
 		return err
 	}
+	defer watcher.Close()
 	filepath.Walk(dw.Path, func(newPath string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
