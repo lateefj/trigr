@@ -15,11 +15,8 @@ import (
 )
 
 var (
-	// Embed Lua source code
-	luaBox packr.Box
 	// Embed Lua test framework
 	uTestBox   packr.Box
-	lslFrame   string
 	uTestFrame string
 
 	// List of standard library functions
@@ -38,11 +35,6 @@ var (
 
 func init() {
 	var err error
-	luaBox = packr.NewBox("./lua")
-	lslFrame, err = luaBox.MustString("env.lua")
-	if err != nil {
-		log.Fatalf("Failed to load lua env %s", err)
-	}
 	uTestBox = packr.NewBox("./lua/u-test")
 	uTestFrame, err = uTestBox.MustString("u-test.lua")
 	if err != nil {
