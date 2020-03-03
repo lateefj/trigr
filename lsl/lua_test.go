@@ -110,7 +110,7 @@ test.example_pass = function()
 end
 `)
 	testFile.Sync()
-	err = loader.Test(testFilePath)
+	err = loader.TestFile(testFilePath)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -130,7 +130,7 @@ end
 `), 0)
 	testFile.Sync()
 
-	err = loader.Test(testFilePath)
+	err = loader.TestFile(testFilePath)
 	if err != nil {
 		t.Fatalf("Failed test did with error %s", err)
 	}

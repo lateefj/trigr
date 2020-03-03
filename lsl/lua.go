@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"os"
 	"path/filepath"
 
 	"github.com/gobuffalo/packr"
@@ -108,12 +109,6 @@ func (ll *LuaLoader) BuildEnv() {
 	if ll.envBuilt {
 		return
 	}
-	// Add u-test lua testing framework
-	ut, err := ll.State.LoadString(uTestFrame)
-	if err != nil {
-		log.Fatalf("Failed to load u-test framework %s", err)
-	}
-	ll.State.SetGlobal("utest", ut)
 
 	// Log wrappers
 	ll.State.SetGlobal("log", luar.New(ll.State, ll.Log.Log))
@@ -200,26 +195,77 @@ func (ll *LuaLoader) File(path string) error {
 	ll.State.Push(lua.LString("llFile"))
 	ll.State.Call(1, 0)
 	return nil
-	return ll.State.CallByParam(lua.P{
-		Fn:      ll.State.GetGlobal("run_file_with_env"),
-		NRet:    1,
-		Protect: true,
-	}, lua.LString(path))
+}
+
+// TestFile ... Just pass the path to the file to run the tests on
+func (ll *LuaLoader) TestFile(path string) error {
+	// Make sure the test code has everything available
+	// require is a key function
+	lua.OpenBase(ll.State)
+	// Load all the standard library
+	ll.LoadAllStdLibs()
+	f, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	testPath := filepath.Dir(path)
+	// To be able to import functions from the file it is testing need to modify the package path
+	pc := fmt.Sprintf("package.path = package.path .. \";\" .. \"%s\" .. \"/?.lua\"\n", testPath)
+
+	pcf, err := ll.State.LoadString(pc)
+	if err != nil {
+		return err
+	}
+	ll.State.Push(pcf)
+	ll.State.Push(lua.LString("packageStuff"))
+	ll.State.Call(1, 0)
+	return ll.Test(f)
+	return nil
 }
 
 // Test ... Execute test file in dsl mode
-func (ll *LuaLoader) Test(path string) error {
-	ll.State.SetGlobal("print", luar.New(ll.State, func(msg string) {
-		ll.Output.Write([]byte(msg))
-	}))
+func (ll *LuaLoader) Test(file io.Reader) error {
 
+	// Add u-test lua testing framework
+	ut, err := ll.State.LoadString(uTestFrame)
+	if err != nil {
+		log.Fatalf("Failed to load u-test framework %s", err)
+	}
+	ll.State.SetGlobal("utest", ut)
+
+	code, err := ioutil.ReadAll(file)
+	if err != nil {
+		return err
+	}
+	ff, err := ll.State.LoadString(string(code))
+	if err != nil {
+		return err
+	}
 	ll.BuildEnv()
-	testPath := filepath.Dir(path)
-	return ll.State.CallByParam(lua.P{
-		Fn:      ll.State.GetGlobal("run_test_with_env"),
-		NRet:    1,
-		Protect: true,
-	}, lua.LString(path), lua.LString(testPath))
+	preCode := `
+print(package.path)
+test = utest()
+	`
+	utf, err := ll.State.LoadString(preCode)
+	if err != nil {
+		return err
+	}
+	ll.State.Push(utf)
+	ll.State.Push(lua.LString("utestSetup"))
+	ll.State.Call(1, 0)
+
+	ll.State.Push(ff)
+	ll.State.Push(lua.LString("llFile"))
+	ll.State.Call(1, 0)
+	postCode := `
+  -- Call for the results of the test
+  local tests, failed =  test.result()
+  -- Print out the summary of results
+  test.summary()
+	`
+	ll.State.LoadString(postCode)
+	return nil
 }
 
 // Close ... End execution and exit
