@@ -1,12 +1,12 @@
 package ext
 
 import (
-	"fmt"
 	"io"
 	"time"
 
 	"github.com/lateefj/trigr"
 	"github.com/lateefj/trigr/lsl"
+	lua "github.com/yuin/gopher-lua"
 	luar "layeh.com/gopher-luar"
 )
 
@@ -31,7 +31,6 @@ func (ll *TrigSL) buildContext(trig *trigr.Trigger, out chan *trigr.Trigger) {
 		trig.Logs <- &trigr.Log{Timestamp: time.Now().Unix(), Text: msg}
 	}))
 	ll.SetGlobalVar("new_trigr", luar.New(ll.State, func(tType string, data map[string]interface{}) *trigr.Trigger {
-		fmt.Printf("new_trigr of type %s and data %v\n", tType, data)
 		return trigr.NewTrigger(tType, data)
 	}))
 
@@ -40,6 +39,12 @@ func (ll *TrigSL) buildContext(trig *trigr.Trigger, out chan *trigr.Trigger) {
 	}))
 	ll.SetGlobalVar("trig", luar.New(ll.State, trig))
 
+}
+
+// RunFunction ... Execute code path
+func (ll TrigSL) RunFunction(file io.Reader, name string, trig *trigr.Trigger, out chan *trigr.Trigger, params ...lua.LValue) error {
+	ll.buildContext(trig, out)
+	return ll.Function(file, name, params...)
 }
 
 // RunCode ... Execute code path
