@@ -1,6 +1,7 @@
 package ext
 
 import (
+	"fmt"
 	"io"
 	"time"
 
@@ -15,19 +16,21 @@ type TrigSL struct {
 }
 
 // NewTrigSL ... creates a new TrigSL
-func NewTrigSL(in io.Reader, out io.Writer, dslPath string) *TrigSL {
-	ll := lsl.NewLuaLoader(in, out, dslPath)
+func NewTrigSL(in io.Reader, out io.Writer) *TrigSL {
+	ll := lsl.NewLuaLoader(in, out)
 	return &TrigSL{*ll}
 }
 
 // Context builder
 func (ll *TrigSL) buildContext(trig *trigr.Trigger) {
 	ll.BuildEnv()
-	ll.SetGlobalVar("log", func(msg string) {
-		// Logging
-		//ll.Log.Log(msg)
+	ll.SetGlobalVar("log", luar.New(ll.State, func(msg string) {
 		trig.Logs <- &trigr.Log{Timestamp: time.Now().Unix(), Text: msg}
-	})
+	}))
+	ll.SetGlobalVar("new_trigr", luar.New(ll.State, func(tType string, data map[string]interface{}) *trigr.Trigger {
+		fmt.Printf("new_trigr of type %s and data %v\n", tType, data)
+		return trigr.NewTrigger(tType, data)
+	}))
 	ll.SetGlobalVar("trig", luar.New(ll.State, trig))
 }
 
@@ -46,5 +49,5 @@ func (ll *TrigSL) RunFile(path string, trig *trigr.Trigger, out chan *trigr.Trig
 // RunTest ... Execute test file in dsl mode
 func (ll *TrigSL) RunTest(path string, trig *trigr.Trigger, out chan *trigr.Trigger) error {
 	ll.buildContext(trig)
-	return ll.Test(path)
+	return ll.TestFile(path)
 }

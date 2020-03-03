@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/lateefj/trigr"
 )
@@ -12,7 +13,7 @@ import (
 func TestRunCode(t *testing.T) {
 	readBuff := bytes.NewBufferString("")
 	writeBuff := bytes.NewBufferString("")
-	loader := NewTrigSL(readBuff, writeBuff, "./lua/env.lua")
+	loader := NewTrigSL(readBuff, writeBuff)
 	loader.Log.Log("Test")
 	if writeBuff.String() != "Test\n" {
 		t.Fatalf("Failed to do any logging expected 'Test' and got %s", writeBuff.String())
@@ -27,7 +28,14 @@ func TestRunCode(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to run code %s", err)
 	}
-	l, more := <-tig.Logs
+	var l *trigr.Log
+	var more bool
+	select {
+	case l, more = <-tig.Logs:
+	case <-time.After(1 * time.Millisecond):
+		t.Fatal("Timeout waiting to get logs")
+	}
+
 	if !more {
 		t.Fatal("Channel closed before first log message is on it....")
 	}
@@ -39,14 +47,14 @@ func TestRunCode(t *testing.T) {
 func TestRunTest(t *testing.T) {
 	readBuff := bytes.NewBufferString("")
 	writeBuff := bytes.NewBufferString("")
-	loader := NewTrigSL(readBuff, writeBuff, "./lua/env.lua")
+	loader := NewTrigSL(readBuff, writeBuff)
 
 	cleanupFiles := make([]string, 0)
 	data := make(map[string]interface{})
 	tig := trigr.NewTrigger("file", data)
 	tig.Logs = make(chan *trigr.Log, 100)
 
-	tstream := make(chan *trigr.Trigger, 0)
+	tstream := make(chan *trigr.Trigger, 1)
 	defer func() { // Remove any created files
 		for _, name := range cleanupFiles {
 			os.Remove(name)
@@ -87,7 +95,14 @@ end
 		t.Errorf("Expected successful test but output is \n%s", output)
 	}
 	for {
-		l, more := <-tig.Logs
+
+		var l *trigr.Log
+		var more bool
+		select {
+		case l, more = <-tig.Logs:
+		case <-time.After(1 * time.Millisecond):
+			t.Fatal("Timeout waiting to get logs")
+		}
 		if !more {
 			t.Fatal("Failed to find successful log")
 		}
