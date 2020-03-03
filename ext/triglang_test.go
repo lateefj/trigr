@@ -35,7 +35,6 @@ func TestRunCode(t *testing.T) {
 	case <-time.After(1 * time.Millisecond):
 		t.Fatal("Timeout waiting to get logs")
 	}
-
 	if !more {
 		t.Fatal("Channel closed before first log message is on it....")
 	}
