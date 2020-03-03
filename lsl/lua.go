@@ -91,8 +91,7 @@ func (ll *LuaLoader) SetGlobalVar(n string, v lua.LValue) {
 	if _, exists := ll.EnvMap[n]; exists {
 		delete(ll.EnvMap, n)
 	}
-	ll.env.RawSet(lua.LString(n), v)
-	ll.State.SetFEnv(v, ll.env)
+	ll.State.SetGlobal(n, v)
 }
 
 // BuildEnv ... Initializes the environment needed
@@ -108,8 +107,7 @@ func (ll *LuaLoader) BuildEnv() {
 
 	// Setup the DSL
 	for k, v := range ll.EnvMap {
-		ll.env.RawSetString(k, v)
-		ll.State.SetFEnv(v, ll.env)
+		ll.State.SetGlobal(k, v)
 	}
 
 	ll.envBuilt = true
@@ -136,7 +134,6 @@ func (ll *LuaLoader) LoadAllStdLibs() {
 
 // DoFile ... Setups up DSL file
 func (ll *LuaLoader) DoFile(path string) error {
-	ll.BuildEnv()
 	return ll.State.DoFile(path)
 }
 
@@ -150,7 +147,6 @@ func (ll *LuaLoader) Function(file io.Reader, name string, params ...lua.LValue)
 	if err != nil {
 		return err
 	}
-	ll.BuildEnv()
 	ll.State.Push(ff)
 	ll.State.Push(lua.LString("llFunction"))
 	ll.State.Call(1, 0)
@@ -164,16 +160,14 @@ func (ll *LuaLoader) Function(file io.Reader, name string, params ...lua.LValue)
 
 // Code ... Execute code path
 func (ll *LuaLoader) Code(code string) error {
-	ff, err := ll.State.LoadString(string(code))
+	ff, err := ll.State.LoadString(code)
 	if err != nil {
 		return err
 	}
-	ll.BuildEnv()
 	ll.State.Push(ff)
 	ll.State.Push(lua.LString("llCode"))
 	ll.State.Call(1, 0)
 	return nil
-
 }
 
 // File ... Runs a DSL file
@@ -182,7 +176,6 @@ func (ll *LuaLoader) File(path string) error {
 	if err != nil {
 		return err
 	}
-	ll.BuildEnv()
 	ll.State.Push(ff)
 	ll.State.Push(lua.LString("llFile"))
 	ll.State.Call(1, 0)

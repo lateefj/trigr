@@ -31,7 +31,6 @@ func TestLuaLoader(t *testing.T) {
 	if !loader.envBuilt {
 		t.Fatal("Environment should be built")
 	}
-	loader.LoadAllStdLibs()
 
 	if writeBuff.String() != "Test\n" {
 		t.Fatalf("Failed to do any logging expected 'Test' and got %s", writeBuff.String())
@@ -72,7 +71,7 @@ end
 
 }
 
-func TestLuaLoaderTest(t *testing.T) {
+func TestLuaTestLoader(t *testing.T) {
 	readBuff := bytes.NewBufferString("")
 	writeBuff := bytes.NewBufferString("")
 	loader := NewLuaLoader(readBuff, writeBuff)
