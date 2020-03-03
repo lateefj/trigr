@@ -5,37 +5,24 @@ import (
 	"os"
 	"strings"
 	"testing"
+
+	lua "github.com/yuin/gopher-lua"
 )
 
 func TestLuaLog(t *testing.T) {
 	buff := bytes.NewBufferString("")
 	llog := &LuaLog{Output: buff}
-	llog.Error("Test")
-	if buff.String() != "ERROR: Test\n" {
-		t.Fatalf("Expected \n'ERROR: Test\n'\n however got \n'%s'", buff.String())
-	}
-	buff.Reset()
-	llog.Info("Test")
-	if buff.String() != "INFO: Test\n" {
-		t.Fatalf("Expected 'INFO: Test' however got %s", buff.String())
-	}
-
-	buff.Reset()
-	llog.Debug("Test")
-	if buff.String() != "DEBUG: Test\n" {
-		t.Fatalf("Expected 'DEBUG: Test\n however got '%s'", buff.String())
-	}
-	buff.Reset()
 	llog.Log("Test")
 	if buff.String() != "Test\n" {
-		t.Fatalf("Expected 'Test\n' however got '%s'", buff.String())
+		t.Fatalf("Expected \n'Test\n'\n however got \n'%s'", buff.String())
 	}
+	buff.Reset()
 }
 
 func TestLuaLoader(t *testing.T) {
 	readBuff := bytes.NewBufferString("")
 	writeBuff := bytes.NewBufferString("")
-	loader := NewLuaLoader(readBuff, writeBuff, "./lua/env.lua")
+	loader := NewLuaLoader(readBuff, writeBuff)
 	loader.Log.Log("Test")
 	if loader.envBuilt {
 		t.Fatal("envBuilt should not have already happen")
@@ -59,10 +46,35 @@ func TestLuaLoader(t *testing.T) {
 	}
 }
 
-func TestLuaLoaderTest(t *testing.T) {
+func TestLuaFunction(t *testing.T) {
 	readBuff := bytes.NewBufferString("")
 	writeBuff := bytes.NewBufferString("")
-	loader := NewLuaLoader(readBuff, writeBuff, "./lua/env.lua")
+	loader := NewLuaLoader(readBuff, writeBuff)
+	err := loader.LoadStdLibs([]string{"string"})
+	if err != nil {
+		t.Fatalf("Failed to load StdLib 'io' %s", err)
+	}
+	loader.BuildEnv()
+	code := `
+function first_char(st)
+	log(string.sub(st, 0, 1))
+end
+	`
+	fileBuf := bytes.NewBufferString(code)
+	err = loader.Function(fileBuf, "first_char", lua.LString("test"))
+	if err != nil {
+		t.Fatalf("Could not call function 'first_char' with error: %s", err)
+	}
+	if strings.TrimSpace(writeBuff.String()) != "t" {
+		t.Fatalf("Expected 't' but got '%s'", strings.TrimSpace(writeBuff.String()))
+	}
+
+}
+
+func TestLuaTestLoader(t *testing.T) {
+	readBuff := bytes.NewBufferString("")
+	writeBuff := bytes.NewBufferString("")
+	loader := NewLuaLoader(readBuff, writeBuff)
 
 	cleanupFiles := make([]string, 0)
 	defer func() { // Remove any created files
@@ -97,7 +109,7 @@ test.example_pass = function()
 end
 `)
 	testFile.Sync()
-	err = loader.Test(testFilePath)
+	err = loader.TestFile(testFilePath)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -117,7 +129,7 @@ end
 `), 0)
 	testFile.Sync()
 
-	err = loader.Test(testFilePath)
+	err = loader.TestFile(testFilePath)
 	if err != nil {
 		t.Fatalf("Failed test did with error %s", err)
 	}

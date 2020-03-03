@@ -116,7 +116,6 @@ func (dw *DirectoryWatcher) Watch() error {
 		case err := <-watcher.Errors:
 			log.Printf("ERROR: %s\n", err)
 		case <-dw.stopChannel:
-			log.Printf("Stopping to watch %s\n", dw.Path)
 			return nil
 		}
 	}

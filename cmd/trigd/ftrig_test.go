@@ -65,7 +65,7 @@ func TestDirectoryWatcher(t *testing.T) {
 	select {
 	case <-stopped:
 		// All good here
-	case <-time.After(10 * time.Millisecond):
+	case <-time.After(10 * time.Millisecond): // Timeout
 		t.Fatal("Failed to stop the directory watcher")
 	}
 
