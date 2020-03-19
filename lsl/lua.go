@@ -9,14 +9,14 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/gobuffalo/packr"
+	packr "github.com/gobuffalo/packr/v2"
 	lua "github.com/yuin/gopher-lua"
 	luar "layeh.com/gopher-luar"
 )
 
 var (
 	// Embed Lua test framework
-	uTestBox   packr.Box
+	uTestBox   *packr.Box
 	uTestFrame string
 
 	// List of standard library functions
@@ -35,10 +35,10 @@ var (
 
 func init() {
 	var err error
-	uTestBox = packr.NewBox("./lua/u-test")
-	uTestFrame, err = uTestBox.MustString("u-test.lua")
+	uTestBox = packr.New("u-test", "./lua/u-test")
+	uTestFrame, err = uTestBox.FindString("u-test.lua")
 	if err != nil {
-		log.Fatalf("Failed to test env %s", err)
+		log.Printf("Failed load test framework u-test error: %s", err)
 	}
 }
 

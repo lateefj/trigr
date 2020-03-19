@@ -7,6 +7,7 @@ require (
 	github.com/GeertJohan/go.rice v1.0.0
 	github.com/fsnotify/fsnotify v1.4.7
 	github.com/gobuffalo/packr v1.30.1
+	github.com/gobuffalo/packr/v2 v2.5.1
 	github.com/gorilla/mux v1.7.3
 	github.com/gorilla/websocket v1.4.1
 	github.com/lateefj/mctest v0.0.0-20170406044324-dc8ca192fab1 // indirect
