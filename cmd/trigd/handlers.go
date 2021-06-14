@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 
-	"bitbucket.org/lateefj/httphacks"
 	"github.com/GeertJohan/go.rice"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
@@ -110,11 +109,11 @@ func setupHandlers() {
 	r := mux.NewRouter()
 	r.Handle("/", http.FileServer(ui))
 	//http.Handle("/bower_components", http.FileServer(bower))
-	r.HandleFunc("/api/status", httphacks.TimeWrap(func(w http.ResponseWriter, r *http.Request) {
+	r.HandleFunc("/api/status", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.Write([]byte(`{"status":"Happy happy joy joy!"}`))
-	}))
-	r.HandleFunc("/project/new", httphacks.TimeWrap(func(w http.ResponseWriter, r *http.Request) {
+	})
+	r.HandleFunc("/project/new", func(w http.ResponseWriter, r *http.Request) {
 		id := r.FormValue("id")
 		path := r.FormValue("path")
 		if id == "" {
@@ -152,7 +151,7 @@ func setupHandlers() {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(fmt.Sprintf("Added project %s with path %s", id, path)))
 
-	}))
+	})
 	//http.HandleFunc("/ws/trigger", PublishTrigger)
 	r.HandleFunc("/ws/{project_id}", ReadMessages)
 	http.Handle("/", r)
